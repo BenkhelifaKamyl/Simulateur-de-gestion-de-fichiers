@@ -13,7 +13,10 @@ typedef struct{
     typeTri interneOrg;
 } MetaDonnee;
 
+MetaDonnee creationFichier(char filename[30]);
 int lireEntete (File *F, int nc);
+typeOrganisation lireEnteteGlobal(FILE *F);
+typeTri lireEnteteInterne(FILE *F);
 void MajEntetenom(FILE *F, char nom[30]);
 void MajEntetenum(FILE *F, int nc, int val);
 void MajeEnteteOrga(FILE *F, int nc);

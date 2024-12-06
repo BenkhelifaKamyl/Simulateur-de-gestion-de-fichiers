@@ -28,7 +28,7 @@ typedef union { //permet de regrouper les deux types de blocs dans une seule str
 
 void initializeDiskChainee();
 void initializeDiskContigue();
-
+void OuvrirFichier(FILE *F, char nomFichier[30], char mode);
 
 
 #endif // DISK_H_INCLUDED
