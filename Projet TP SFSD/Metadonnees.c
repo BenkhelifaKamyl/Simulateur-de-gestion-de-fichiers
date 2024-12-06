@@ -7,6 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
+
 int lireEntete(FILE *F, int nc){
     rewind(F);
     MetaDonnee MD;
@@ -47,26 +48,24 @@ void MajEntetenum(FILE *F, int nc, int val){
 }
 void MajeEnteteOrga(FILE *F, int nc){
     rewind(F);
+    fseek(F, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
     switch(nc){
     case 1:
-        fseek(F, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
         fwrite(&Chainee,sizeof(typeOrganisation),1,F);
         break;
     case 2:
-        fseek(F, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
         fwrite(&Contigue,sizeof(typeOrganisation),1,F);
         break;
     }
 }
 void MajeEntetetri(FILE *F, int nc){
     rewind(F);
+    fseek(F, 30*sizeof(char)+3*sizeof(int) + sizeof(typeOrganisation), SEEK_SET);
     switch(nc){
     case 1:
-        fseek(F, 30*sizeof(char)+3*sizeof(int) + sizeof(typeOrganisation), SEEK_);
         fwrite(&triee,sizeof(typeTri),1,F);
         break;
     case 2:
-        fseek(F, 30*sizeof(char)+3*sizeof(int) + sizeof(typeOrganisation), SEEK_CUR);
         fwrite(&nonTriee,sizeof(typeTri),1,F);
         break;
     }

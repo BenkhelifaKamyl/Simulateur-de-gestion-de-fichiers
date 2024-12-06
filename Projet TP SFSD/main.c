@@ -2,54 +2,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include<conio.h>
-#include <windows.h>
+#include "TextColor.h"
+#include "Metadonnees.h"
+#include "TableIndex.h"
+#include "Disk.h"
 
-#define FacteurBlocage 5
-
-typedef struct{
-    int ID;
-    char Data[100];
-    bool Supprime; //Pour la potentielle suppression logique
-} Enregistrement;
-
-typedef struct{
-    Enregistrement enregistrement[FacteurBlocage];
-    int adresse;
-    bool free; //Pour savoir si le bloc est libre ou occupe
-}BlocContigue;
-
-typedef struct{
-    Enregistrement enregistrement[FacteurBlocage];
-    int adresse;
-    bool free; //Pour savoir si le bloc est libre ou occupe
-    int next; //Pour pointer vers le prochain bloc
-}BlocChainee;
-
-typedef union { //permet de regrouper les deux types de blocs dans une seule structure
-    BlocContigue contigue;
-    BlocChainee chainee;
-} Bloc;
-
-typedef struct{
-    int table[50];
-    int taille;
-}tableAllocation;
-
-typedef enum { Contigue, Chainee } typeOrganisation;
-typedef enum {triee, nonTriee} typeTri;
-
-typedef struct{
-    char name[30];
-    int nbBlocs;
-    int nbEnregistrements;
-    int premiereAdresse;
-    typeOrganisation globalOrg;
-    typeTri interneOrg;
-} MetaDonnee;
+Bloc disk[MAX_BLOCKS];      // Disque virtuel avec des blocs
+MetaDonnee files[MAX_FILES];   // Tableau des fichiers et leurs métadonnées
+int fileCount = 0;           // Nombre de fichiers actuellement créés
+Index TableAllocation[MAX_BLOCKS];
 
 
-//void setColor(int color) { HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE); SetConsoleTextAttribute(hConsole, color); }
+
 int main()
 {
 
