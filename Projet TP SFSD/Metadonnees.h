@@ -13,7 +13,7 @@ typedef struct{
     typeTri interneOrg;
 } MetaDonnee;
 typedef struct{
-    MetaDonnee Entete;
+    FILE *MDfile;
     FILE *file;
 } fichier;
 
