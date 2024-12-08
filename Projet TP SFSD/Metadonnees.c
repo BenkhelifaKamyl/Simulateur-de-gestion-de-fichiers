@@ -38,77 +38,77 @@ MetaDonnee creationFichier(char filename[30]){
     return MD;
 }
 
-int lireEntete(FILE *F, int nc){
-    rewind(F);
-    MetaDonnee MD;
-    fread(&MD,sizeof(MetaDonnee),1,F);
+int lireEntete(fichier F, int nc){
     switch (nc){
     case 2:
-        return MD.nbBlocs;
+        return F.Entete.nbBlocs;
         break;
     case 3:
-        return MD.nbEnregistrements;
+        return F.Entete.nbEnregistrements;
         break;
     case 4:
-        return MD.premiereAdresse;
+        return F.Entete.premiereAdresse;
         break;
     }
 }
-typeOrganisation lireEnteteGlobal(FILE *F){
-    rewind(F);
-    MetaDonnee MD;
-    fread(&MD, sizeof(MetaDonnee),1,F);
-    return MD.globalOrg;
+typeOrganisation lireEnteteGlobal(fichier F){
+    return F.Entete.globalOrg;
 }
 
-typeTri lireEnteteInterne(FILE *F){
-    rewind(F);
-    MetaDonnee MD;
-    fread(&MD, sizeof(MetaDonnee),1,F);
-    return MD.interneOrg;
+typeTri lireEnteteInterne(fichier F){
+    return F.Entete.interneOrg;
 }
-void MajEntetenom(FILE *F, char nom[30]){
-    rewind(F);
-    fwrite(&nom, 30*sizeof(char),1,F);
+void MajEntetenom(fichier *F, char nom[30]){
+    strcpy(F->Entete.name, nom);
 }
-void MajEntetenum(FILE *F, int nc, int val){
-    rewind(F);
+void MajEntetenum(fichier *F, int nc, int val){
     switch(nc){
-    case 2:
-        fseek(F,30*sizeof(char),SEEK_SET);
-        fwrite(&val, sizeof(int),1,F);
+    case 2: //nombre blocs
+        F->Entete.nbBlocs = val;
         break;
-    case 3:
-        fseek(F, 30*sizeof(char)+2*sizeof(int), SEEK_SET);
-        fwrite(&val, sizeof(int),1,F);
+    case 3: //nombres enregistrements
+        F->Entete.nbEnregistrements = val;
         break;
-    case 4:
-        fseek(F, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
-        fwrite(&val, sizeof(int),1,F);
+    case 4: //premiereAdress
+        F->Entete.premiereAdresse = val;
         break;
     }
 }
-void MajeEnteteOrga(FILE *F, int nc){
-    rewind(F);
-    fseek(F, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
+void MajeEnteteOrga(fichier *F, int nc){
     switch(nc){
     case 1:
-        fwrite(&Chainee,sizeof(typeOrganisation),1,F);
+        F->Entete.globalOrg = typeOrganisation.Chainee;
         break;
     case 2:
-        fwrite(&Contigue,sizeof(typeOrganisation),1,F);
+        F->Entete.globalOrg = typeOrganisation.Contigue;
         break;
     }
 }
-void MajeEntetetri(FILE *F, int nc){
-    rewind(F);
-    fseek(F, 30*sizeof(char)+3*sizeof(int) + sizeof(typeOrganisation), SEEK_SET);
+void MajeEntetetri(fichier *F, int nc){
     switch(nc){
     case 1:
-        fwrite(&triee,sizeof(typeTri),1,F);
+        F->Entete.interneOrg= typeTri.triee;
         break;
     case 2:
-        fwrite(&nonTriee,sizeof(typeTri),1,F);
+        F->Entete.interneOrg = typeTri.nonTriee;
         break;
     }
 }
+void OuvrirFichier(Fichier *F,char nomFichier[30], char mode){
+    BLOC Buffer;
+    if(mode == 'w'){
+        F->file = fopen(nomFichier,"wb+");
+        MajEntetenom()
+    }
+
+}
+void LireBloc(fichier *F, int i, Bloc *Buffer){
+    fseek(F->file,sizeof(MetaDonnee)+ (i-1)*sizeof(Bloc), SEEK_SET); //Lire depuis le bloc i-1
+    fread(Buffer, sizeof(Bloc),1,F->file);
+}
+void EcrireBloc(fichier *F, int i, BLOC Buffer){
+    fseek(F->file,sizeof(MetaDonnee)+ (i-1)*sizeof(Bloc), SEEK_SET); //Ecrire dans le bloc i-1
+    fwrite(&Buffer, sizeof(Bloc),1,F->file);
+}
+
+

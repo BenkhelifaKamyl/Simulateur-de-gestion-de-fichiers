@@ -7,7 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-Bloc disk[MAX_BLOCKS];      // Disque virtuel avec des blocs
+Bloc disk[MAX_BLOCKS];    // Disque virtuel avec des blocs
 MetaDonnee files[MAX_FILES];   // Tableau des fichiers et leurs métadonnées
 int fileCount = 0;           // Nombre de fichiers actuellement créés
 Index TableAllocation[MAX_BLOCKS];

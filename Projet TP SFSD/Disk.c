@@ -22,6 +22,4 @@ void initializeDiskContigue() {
     }
     printf("Disk initialized with %d blocks.\n", MAX_BLOCKS);
 }
-void OuvrirFichier(FILE *F,char nomFichier[30], char mode){
 
-}
