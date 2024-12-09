@@ -7,7 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-/*MetaDonnee creationFichier(char filename[30]){
+MetaDonnee creationFichier(char filename[30]){
     int orgGlobale;
     int orgInterne;
     MetaDonnee MD;
@@ -21,9 +21,9 @@
             printf("Entrée invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
     } while(orgGlobale!=2 && orgGlobale!=1);
     if(orgGlobale==1)
-        MD.globalOrg = Chainee;
+        MD.globalOrg = typeOrganisation.Chainee;
     else
-        MD.globalOrg = Contigue;
+        MD.globalOrg = typeOrganisation.Contigue;
     printf("\nDonnez le type d'organisation interne: 1)Triee 2)Non triee");
     do{
         scanf("%d",&orgInterne);
@@ -31,12 +31,12 @@
             printf("Entrée invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
     } while(orgInterne!=2 && orgInterne!=1);
     if(orgInterne==1)
-        MD.interneOrg = triee;
+        MD.interneOrg = typeTri.triee;
     else
-        MD.interneOrg = nonTriee;
-    MD.premiereAdresse = ?
+        MD.interneOrg = typeTri.nonTriee;
+        MD.premiereAdresse = ?
     return MD;
-}*/ //Mauvaise implementation, a changer
+}
 
 int lireEntete(fichier F, int nc){
     rewind(F->MDfile);
@@ -112,14 +112,37 @@ void MajeEntetetri(fichier *F, int nc){
         break;
     }
 }
-/*void OuvrirFichier(Fichier *F,char nomFichier[30], char mode){
-    BLOC Buffer;
+void OuvrirFichier(Fichier *F,char nomFichier[30], char mode){
+    Bloc Buffer;
+    MetaDonnee MD; = creationFichier(nomFichier);
+    char nomMD[46];
+    strcpy(nomMD, nomFichier);
+    strcat(nomMD, "Metadonnees.bin");
+    strcat(nomFichier, ".bin");
     if(mode == 'w'){
-        F->file = fopen(nomFichier,"wb+");
-        MajEntetenom()
-    }
+        MD = = creationFichier(nomFichier);
+        F->MDfile = fopen(nomMD,"wb+");
+        if(F->MDfile!= NULL){
+        fwrite(&MD, sizeof(MetaDonnee),1,F->MDfile);
+        }
+        F->file = fopen(nomFichier, "wb+");
+        if(F->file!=NULL){
+            Bloc Buffer;
 
-}*/
+        }
+
+    }
+    else if(mode=='r'){
+        F->MDfile = fopen(nomMD,"rb+");
+        if(f->MDfile!=NULL){
+        fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+        }
+        F->file = fopen(nomFichier, "wb+");
+    }
+    else{
+        printf("Ce mode d'ouverture n'existe pas.\n");
+    }
+}
 void LireBloc(fichier *F, int i, Bloc *Buffer){
     if(i<0 || i>=MAX_BLOCKS)
         printf("Indice de bloc invalide\n");
