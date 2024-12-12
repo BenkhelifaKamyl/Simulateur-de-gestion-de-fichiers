@@ -154,10 +154,37 @@ void fillFile(int fileID, bool isSorted) {
 
 
 //7 Charger un Fichier
-void loadFile(int fileID) {
-    // Allouer les blocs nécessaires pour ce fichier
-    printf("File %d loaded into disk.\n", fileID);
+void loadFile(int fileID) {// Check if the file ID is valid
+    if (fileID < 0 || fileID >= MAX_BLOCKS) {
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+    int allocatedBlocks = 0;
+    for (int i = 0; i < MAX_BLOCKS; i++) {   // find and allocate free blocks
+        if (disk[i].contigue.free) { // Check if the block is free
+            disk[i].contigue.free = false; // Mark the block as used
+            for (int j = 0; j < BLOCK_SIZE; j++) {    // Initialize the records in this block
+                disk[i].contigue.enregistrement[j].ID = -1; // Default ID
+                disk[i].contigue.enregistrement[j].Supprime = false; // Logical deletion set to false
+                memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data)); // Clear data
+            }
+            allocatedBlocks++;
+            printf("Block %d allocated for file %d.\n", i, fileID);
+            if (allocatedBlocks >= BLOCK_SIZE) { // Stop allocation if enough blocks have been allocated
+                break;
+            }
+        }
+    }
+
+    // Check if any blocks were allocated
+    if (allocatedBlocks == 0) {
+        printf("Error: No blocks available for file %d.\n", fileID);
+    } else {
+        printf("File %d loaded with %d blocks allocated.\n", fileID, allocatedBlocks);
+    }
 }
+
+
 //8 Insérer un Enregistrement (Trié et Non Trié)
 void insertRecord(int fileID, Enregistrement record, bool isSorted) {
     if (isSorted) { // find the correct position for sorted insertion
@@ -203,21 +230,101 @@ void insertRecord(int fileID, Enregistrement record, bool isSorted) {
 
 //9Suppression Logique d'un Enregistrement
 void deleteRecordLogical(int fileID, int recordID) {
-    // Chercher l'enregistrement et le marquer comme supprimé
-    printf("Logical deletion of record %d in file %d.\n", recordID, fileID);
-}
-//10 Suppression Physique d'un Enregistrement
-void deleteRecordPhysical(int fileID, int recordID) {
-    // Réorganiser les blocs pour libérer l'espace
-    printf("Physical deletion of record %d in file %d.\n", recordID, fileID);
-}
-//11Défragmentation d'un Fichier
-void defragmentFile(int fileID) {
-    // Défragmenter le fichier pour libérer de l'espace
-    printf("File %d defragmented.\n", fileID);
-}
-//12void deleteFile(int fileID) {
-    // Libérer les blocs du fichier
-    printf("File %d deleted.\n", fileID);
+    if (fileID < 0 || fileID >= MAX_BLOCKS) {    // Check if the file ID is valid
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+    for (int i = 0; i < MAX_BLOCKS; i++) {    // find the record
+        if (!disk[i].contigue.free) { // Check if the block is in use
+            for (int j = 0; j < BLOCK_SIZE; j++) {
+                if (disk[i].contigue.enregistrement[j].ID == recordID) { // Check if the record matches the given record ID
+                    disk[i].contigue.enregistrement[j].Supprime = true; // Mark the record as logically deleted
+                    printf("Record %d in file %d marked as logically deleted.\n", recordID, fileID);
+                    return;
+                }
+            }
+        }
+    }
+    // If the record is not found
+    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
 
+
+
+//10 Suppression Physique d'un Enregistrement
+void deleteRecordPhysical(int fileID, int recordID) {
+   if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Check if the file ID is valid
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+    for (int i = 0; i < MAX_BLOCKS; i++) { //find the record
+        if (!disk[i].contigue.free) { // Check if the block is in use
+            for (int j = 0; j < BLOCK_SIZE; j++) {
+                if (disk[i].contigue.enregistrement[j].ID == recordID) { // Check if the record matches the given record ID
+                    // Remove the record by resetting its fields
+                    disk[i].contigue.enregistrement[j].ID = -1;
+                    disk[i].contigue.enregistrement[j].Supprime = false;
+                    memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
+                    printf("Record %d in file %d physically deleted.\n", recordID, fileID);
+                    return;
+                }
+            }
+        }
+    }
+    // If the record is not found
+    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+}
+
+
+
+//11 Défragmentation d'un Fichier
+void defragmentFile(int fileID) {
+    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+    for (int i = 0; i < MAX_BLOCKS; i++) { // Iterate through the disk to compact the file's records
+        if (!disk[i].contigue.free) { // Check if the block is in use
+            int writeIndex = 0;
+            for (int j = 0; j < BLOCK_SIZE; j++) {
+                // Move non-deleted records to fill gaps
+                if (!disk[i].contigue.enregistrement[j].Supprime) {
+                    if (writeIndex != j) {
+                        disk[i].contigue.enregistrement[writeIndex] = disk[i].contigue.enregistrement[j];
+                    }
+                    writeIndex++;
+                }
+            }
+            for (int j = writeIndex; j < BLOCK_SIZE; j++) {// Clear remaining records in the block
+                disk[i].contigue.enregistrement[j].ID = -1;
+                disk[i].contigue.enregistrement[j].Supprime = false;
+                memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
+            }
+        }
+    }
+
+    printf("File %d defragmented.\n", fileID);
+}
+
+
+
+
+//12  
+void deleteFile(int fileID) {
+    if (fileID < 0 || fileID >= MAX_BLOCKS) {// Check if the file ID is valid
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+    for (int i = 0; i < MAX_BLOCKS; i++) {   // Iterate through the disk to free all blocks associated with the file
+        if (!disk[i].contigue.free) { // Check if the block is in use
+            for (int j = 0; j < BLOCK_SIZE; j++) {  // Clear all records in the block
+                disk[i].contigue.enregistrement[j].ID = -1;
+                disk[i].contigue.enregistrement[j].Supprime = false;
+                memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
+            }
+            disk[i].contigue.free = true; // Mark the block as free
+        }
+    }
+
+    printf("File %d deleted.\n", fileID);
+}
