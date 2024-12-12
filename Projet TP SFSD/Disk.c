@@ -123,11 +123,36 @@ bool checkBlock(int blockID) {
     }
     return false;
 }
+
+
 //6Remplir un Fichier (Trié et Non Trié)
 void fillFile(int fileID, bool isSorted) {
-    // Remplir le fichier avec des enregistrements, trié ou non
-    printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
+    for (int i=0 ; i<MAX_BLOCKS; i++) {// Find the first free block
+        if (disk[i].chainee.free) {
+            disk[i].chainee.free = false; 
+            if (isSorted) {
+                for (int j=0 ; j<BLOCK_SIZE; j++) {
+                    disk[i].chainee.enregistrement[j].ID = fileID*BLOCK_SIZE+j+1;
+                    snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID * BLOCK_SIZE + j + 1);
+                    disk[i].chainee.enregistrement[j].Supprime = false; 
+                    for (int k=j; k>0 && disk[i].chainee.enregistrement[k].ID<disk[i].chainee.enregistrement[k-1].ID; k--) {
+                        Enregistrement temp = disk[i].chainee.enregistrement[k];
+                        disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k-1];
+                        disk[i].chainee.enregistrement[k-1] = temp;
+                    }
+                }
+            } else { // Fill the block without sorting
+                for (int j=0 ;j<BLOCK_SIZE; j++) {
+                    disk[i].chainee.enregistrement[j].ID = fileID*BLOCK_SIZE+j+1;
+                    snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID*BLOCK_SIZE+j+1);
+                    disk[i].chainee.enregistrement[j].Supprime = false;}}
+            if ((fileID+1)*BLOCK_SIZE<=(i+1)*BLOCK_SIZE) { // Stop filling when the file is filled completely
+                break;}}}
+     printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");}}
+
 }
+
+
 //7 Charger un Fichier
 void loadFile(int fileID) {
     // Allouer les blocs nécessaires pour ce fichier
