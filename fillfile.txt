@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------compactage---------------------------------------------------------------
+//------compactage-------
 void Compactage() {
     int freeBlockPointer = 0;
 
@@ -16,10 +16,8 @@ void Compactage() {
     }
 
     printf("disk compacted.\n");
-
-
-
-//----------------------------------------------------------- Function to clear all memory---------------------------------------------
+}
+//-----------function to clear all memory ------
 void ViderMS() {
     for (int i = 0; i < memory.totalBlocks; i++) {
         memory.blocks[i].isFree = 1;
@@ -34,7 +32,7 @@ void ViderMS() {
 
 
 
-// --------------------------------------------------Function to verify if a block is free-------------------------------------------------------
+// ----------------Function to verify if a block is free-------------
 int VerifBloc(int blockIndex) {
     if (blockIndex < 0 || blockIndex >= memory.totalBlocks) {
         printf("Error: Invalid block index.\n");
@@ -45,7 +43,8 @@ int VerifBloc(int blockIndex) {
 }
 
 
-//------------------------------- Function to add a record to a sorted file and maintain the sorted order-----------------------------------------
+
+//------------ Function to add a record to a sorted file and maintain the sorted order------
 void RemplirFichierTriee(const char* fileName, const char* newRecord) {
     // Find the file by name
     for (int i = 0; i < fileCount; i++) {
@@ -87,9 +86,7 @@ void RemplirFichierTriee(const char* fileName, const char* newRecord) {
 
 
 
-
-
-// --------------------------------------------------Function to add a record to an unsorted file---------------------------------------
+// -----------------Function to add a record to an unsorted file------------------------------
 void RemplirFichierNonTriee(const char* fileName, const char* newRecord) {
     // Find the file by name
     for (int i = 0; i < fileCount; i++) {
@@ -117,10 +114,6 @@ void RemplirFichierNonTriee(const char* fileName, const char* newRecord) {
 
     printf("Error: File '%s' not found.\n", fileName);
 }
-
-
-
-
 
 
 
