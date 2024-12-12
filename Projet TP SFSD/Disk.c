@@ -160,14 +160,47 @@ void loadFile(int fileID) {
 }
 //8 Insérer un Enregistrement (Trié et Non Trié)
 void insertRecord(int fileID, Enregistrement record, bool isSorted) {
-    // Si trié, insérer à la bonne position
-    if (isSorted) {
-        // Code pour insérer trié
+    if (isSorted) { // find the correct position for sorted insertion
+        for (int i = 0; i < MAX_BLOCKS; i++) {
+            if (!disk[i].chainee.free) { // Check if the block belongs to the file
+                for (int j = 0; j < BLOCK_SIZE; j++) { // Find the correct position
+                    if (disk[i].chainee.enregistrement[j].ID== 0 || record.ID<disk[i].chainee.enregistrement[j].ID) { // Correct position
+                        for (int k = BLOCK_SIZE - 1; k > j; k--) {      // Shift records to make space for the new record
+                            disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k-1];}
+                        disk[i].chainee.enregistrement[j] = record; // Insert the new record
+                        printf("Record inserted in sorted order in file %d at block %d, position %d.\n", fileID, i, j);
+                        return;
+                    }
+                }
+                if (disk[i].chainee.next == -1) { // If the block is full, move to the next block
+                    printf("Error: No space left to insert the record in sorted order for file %d.\n", fileID);
+                    return;
+                }
+            }
+        }
     } else {
-        // Code pour insérer sans tri
+        // Insert without sorting
+        for (int i = 0; i < MAX_BLOCKS; i++) {
+            if (!disk[i].chainee.free) { // Check if the block belongs to the file
+                for (int j = 0; j < BLOCK_SIZE; j++) {
+                    if (disk[i].chainee.enregistrement[j].ID == 0) {
+                        disk[i].chainee.enregistrement[j] = record;
+                        printf("Record inserted in unsorted order in file %d at block %d, position %d.\n", fileID, i, j);
+                        return;
+                    }
+                } 
+                if (disk[i].chainee.next == -1) {// If the block is full, move to the next block
+                    printf("Error: No space left to insert the record in unsorted order for file %d.\n", fileID);
+                    return;
+                }
+            }
+        }
     }
-    printf("Record inserted in file %d.\n", fileID);
+
+    printf("Error: File %d not found or no space available.\n", fileID);
 }
+
+
 //9Suppression Logique d'un Enregistrement
 void deleteRecordLogical(int fileID, int recordID) {
     // Chercher l'enregistrement et le marquer comme supprimé
