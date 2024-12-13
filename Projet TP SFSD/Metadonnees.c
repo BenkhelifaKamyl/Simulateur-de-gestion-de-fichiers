@@ -21,9 +21,9 @@ MetaDonnee creationFichier(char filename[30]){
             printf("Entrée invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
     } while(orgGlobale!=2 && orgGlobale!=1);
     if(orgGlobale==1)
-        MD.globalOrg = typeOrganisation.Chainee;
+        MD.globalOrg = Chainee;
     else
-        MD.globalOrg = typeOrganisation.Contigue;
+        MD.globalOrg = Contigue;
     printf("\nDonnez le type d'organisation interne: 1)Triee 2)Non triee");
     do{
         scanf("%d",&orgInterne);
@@ -31,17 +31,22 @@ MetaDonnee creationFichier(char filename[30]){
             printf("Entrée invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
     } while(orgInterne!=2 && orgInterne!=1);
     if(orgInterne==1)
-        MD.interneOrg = typeTri.triee;
+        MD.interneOrg = triee;
     else
-        MD.interneOrg = typeTri.nonTriee;
-        MD.premiereAdresse = ?
+        MD.interneOrg = nonTriee;
+    //MD.premiereAdresse = ?
     return MD;
 }
-
-int lireEntete(fichier F, int nc){
-    rewind(F->MDfile);
+void lireNomFichier(fichier F, char nomFichier[30]){
+    rewind(F.MDfile);
     MetaDonnee MD;
-    fread(&MD,sizeof(MetaDonnee),1,F->MDfile);
+    fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
+    strcpy(nomFichier, MD.name);
+}
+int lireEntete(fichier F, int nc){
+    rewind(F.MDfile);
+    MetaDonnee MD;
+    fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
     switch (nc){
     case 2:
         return MD.nbBlocs;
@@ -55,72 +60,108 @@ int lireEntete(fichier F, int nc){
     }
 }
 typeOrganisation lireEnteteGlobal(fichier F){
-    rewind(F->MDfile);
+    rewind(F.MDfile);
     MetaDonnee MD;
-    fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+    fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
     return MD.globalOrg;
 }
 
 typeTri lireEnteteInterne(fichier F){
-    rewind(F->MDfile);
+    rewind(F.MDfile);
     MetaDonnee MD;
-    fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+    fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
     return MD.interneOrg;
 }
 void MajEntetenom(fichier *F, char nom[30]){
     rewind(F->MDfile);
-    fwrite(&nom, 30*sizeof(char),1,F->MDfile);
+    MetaDonnee MD;
+    fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+    strcpy(MD.name,nom);
+    rewind(F->MDfile);
+    fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
 }
 void MajEntetenum(fichier *F, int nc, int val){
      rewind(F->MDfile);
+     MetaDonnee MD;
      switch(nc){
-        case 2:
-        fseek(F->MDfile,30*sizeof(char),SEEK_SET);
-        fwrite(&val, sizeof(int),1,F->MDfile);
+        case 2: //Nombre de blocs
+        fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+        MD.nbBlocs=val;
+        rewind(F->MDfile);
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
-    case 3:
-        fseek(F->MDfile, 30*sizeof(char)+2*sizeof(int), SEEK_SET);
-        fwrite(&val, sizeof(int),1,F->MDfile);
+    case 3: // Nombre d'enregistrements
+        fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+        MD.nbEnregistrements=val;
+        rewind(F->MDfile);
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
-    case 4:
-        fseek(F->MDfile, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
-        fwrite(&val, sizeof(int),1,F->MDfile);
+    case 4: //Premiere adresse
+        fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+        MD.premiereAdresse=val;
+        rewind(F->MDfile);
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
     }
 }
 void MajeEnteteOrga(fichier *F, int nc){
     rewind(F->MDfile);
-    fseek(F->MDfile, 30*sizeof(char)+3*sizeof(int), SEEK_SET);
+    MetaDonnee MD;
+    fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+    rewind(F->MDfile);
     switch(nc){
     case 1:
-        fwrite(&Chainee,sizeof(typeOrganisation),1,F->MDfile);
+        MD.globalOrg = Chainee;
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
     case 2:
-        fwrite(&Contigue,sizeof(typeOrganisation),1,F->MDfile);
+        MD.globalOrg = Contigue;
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
     }
 }
 void MajeEntetetri(fichier *F, int nc){
-    rewind(F->MDfile->MDfile);
-    fseek(F->MDfile->Entete, 30*sizeof(char)+3*sizeof(int) + sizeof(typeOrganisation), SEEK_SET);
+    rewind(F->MDfile);
+    MetaDonnee MD;
+    fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
+    rewind(F->MDfile);
     switch(nc){
     case 1:
-        fwrite(&triee,sizeof(typeTri),1,F->MDfile->Entete);
+        MD.interneOrg = triee;
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
     case 2:
-        fwrite(&nonTriee,sizeof(typeTri),1,F->MDfile->Entete);
+        MD.interneOrg = nonTriee;
+        fwrite(&MD,sizeof(MetaDonnee),1,F->MDfile);
         break;
     }
 }
-void OuvrirFichier(Fichier *F,char nomFichier[30], char mode){
+void AfficherEntete(fichier F){
+    rewind(F.MDfile);
+    MetaDonnee MD;
+    fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
+    printf("\nNom fichier: %s", MD.name);
+    printf("\nNombre de blocs: %d",MD.nbBlocs);
+    printf("\nNombre d'enregistrements: %d",MD.nbEnregistrements);
+    printf("\nPremiere adresse du fichier dans le disque: %d",MD.premiereAdresse);
+    if(MD.globalOrg == Chainee)
+        printf("\nOrganisation globale: Chainee");
+    else
+        printf("\nOrganisation globale: Contigue");
+    if(MD.interneOrg == triee)
+        printf("\nOrganisation interne: Triee");
+    else
+        printf("\nOrganisation interne: Non triee");
+}
+/*void OuvrirFichier(fichier *F,char nomFichier[30], char mode){
     Bloc Buffer;
-    MetaDonnee MD; = creationFichier(nomFichier);
+    MetaDonnee MD = creationFichier(nomFichier);
     char nomMD[46];
     strcpy(nomMD, nomFichier);
     strcat(nomMD, "Metadonnees.bin");
     strcat(nomFichier, ".bin");
     if(mode == 'w'){
-        MD = = creationFichier(nomFichier);
+        MD = creationFichier(nomFichier);
         F->MDfile = fopen(nomMD,"wb+");
         if(F->MDfile!= NULL){
         fwrite(&MD, sizeof(MetaDonnee),1,F->MDfile);
@@ -157,7 +198,7 @@ void EcrireBloc(fichier *F, int i, Bloc Buffer){
     else{
     fseek(F->file,sizeof(MetaDonnee)+ (i-1)*sizeof(Bloc), SEEK_SET); //Ecrire dans le bloc i
     fwrite(&Buffer, sizeof(Bloc),1,F->file);
-    }
-}
+    memcpy(&disk[i], &Buffer, sizeof(Bloc));
+}*/
 
 

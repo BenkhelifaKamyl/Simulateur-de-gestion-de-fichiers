@@ -7,88 +7,21 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-void initializeDiskChainee() {
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        disk[i].chainee.free = true;           // Marque tous les blocs comme libres
-        disk[i].chainee.next = -1;       // Pas de bloc suivant initialement
-        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE); // Vide les donn√©es du bloc
-    }
-    printf("Disk initialized with %d blocks.\n", MAX_BLOCKS);
-}
-void initializeDiskContigue() {
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        disk[i].contigue.free = true;           // Marque tous les blocs comme libres
-        memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE); // Vide les donn√©es du bloc
-    }
-    printf("Disk initialized with %d blocks.\n", MAX_BLOCKS);
-}
-////1 D√©finir les Structures et les Fonctions de Base............................................................
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-
-#define MAX_BLOCKS 100
-#define BLOCK_SIZE 128
-
-// Structure d'un enregistrement
-typedef struct {
-    int ID;
-    char Data[100];
-    bool Supprime;  //  suppression logique
-} Enregistrement;
-
-// bloc (organisation contigu√´)
-typedef struct {
-    Enregistrement enregistrement[BLOCK_SIZE];
-    bool free;
-} BlocContigue;
-
-// Structure d'un bloc cha√Æn√© (organisation cha√Æn√©e)
-typedef struct {
-    Enregistrement enregistrement[BLOCK_SIZE];
-    bool free;
-    int next;
-} BlocChainee;
-
-//  stocker un bloc soit contigu, soit cha√Æn√©
-typedef union {
-    BlocContigue contigue;
-    BlocChainee chainee;
-} Bloc;
-
-// Le disque qui contient les blocs
-Bloc disk[MAX_BLOCKS];
-
-// Fonctions de gestion du disque
-void initializeDiskChainee();
-void initializeDiskContigue();
-void compactDisk();
-void clearDisk();
-bool checkBlock(int blockID);
-void fillFile(int fileID, bool isSorted);
-void loadFile(int fileID);
-void insertRecord(int fileID, Enregistrement record, bool isSorted);
-void deleteRecordLogical(int fileID, int recordID);
-void deleteRecordPhysical(int fileID, int recordID);
-void defragmentFile(int fileID);
-void deleteFile(int fileID);
-//2 Initialisation du Disque
-// Initialisation pour l'organisation cha√Æn√©e
+// Initialisation pour l'organisation chaÓnÈe
 void initializeDiskChainee() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         disk[i].chainee.free = true;           // Marque tous les blocs comme libres
         disk[i].chainee.next = -1;             // Pas de bloc suivant initialement
-        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE); // Vide les donn√©es du bloc
+        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE); // Vide les donnÈes du bloc
     }
     printf("Disk initialized with %d blocks in chained mode.\n", MAX_BLOCKS);
 }
 
-// Initialisation pour l'organisation contigu√´
+// Initialisation pour l'organisation contiguÎ
 void initializeDiskContigue() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         disk[i].contigue.free = true;         // Marque tous les blocs comme libres
-        memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE); // Vide les donn√©es du bloc
+        memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE); // Vide les donnÈes du bloc
     }
     printf("Disk initialized with %d blocks in contiguous mode.\n", MAX_BLOCKS);
 }
@@ -99,7 +32,7 @@ void compactDisk() {
         if (disk[i].chainee.free) {
             lastFreeBlock = i;
         } else if (lastFreeBlock != -1) {
-            // D√©place le bloc non libre pour combler l'espace
+            // DÈplace le bloc non libre pour combler l'espace
             disk[lastFreeBlock] = disk[i];
             disk[i].chainee.free = true;
             disk[lastFreeBlock].chainee.next = -1;
@@ -107,7 +40,7 @@ void compactDisk() {
     }
     printf("Disk compacted.\n");
 }
-//4 Vider la M√©moire Secondaire
+//4 Vider la MÈmoire Secondaire
 void clearDisk() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         disk[i].chainee.free = true;
@@ -116,7 +49,7 @@ void clearDisk() {
     }
     printf("Disk cleared.\n");
 }
-//5V√©rification d'un Bloc
+//5VÈrification d'un Bloc
 bool checkBlock(int blockID) {
     if (blockID >= 0 && blockID < MAX_BLOCKS) {
         return !disk[blockID].chainee.free;
@@ -124,34 +57,36 @@ bool checkBlock(int blockID) {
     return false;
 }
 
-
-//6Remplir un Fichier (Tri√© et Non Tri√©)
+//6Remplir un Fichier (TriÈ et Non TriÈ)
 void fillFile(int fileID, bool isSorted) {
     for (int i=0 ; i<MAX_BLOCKS; i++) {// Find the first free block
         if (disk[i].chainee.free) {
-            disk[i].chainee.free = false; 
+            disk[i].chainee.free = false;
             if (isSorted) {
                 for (int j=0 ; j<BLOCK_SIZE; j++) {
                     disk[i].chainee.enregistrement[j].ID = fileID*BLOCK_SIZE+j+1;
                     snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID * BLOCK_SIZE + j + 1);
-                    disk[i].chainee.enregistrement[j].Supprime = false; 
+                    disk[i].chainee.enregistrement[j].Supprime = false;
                     for (int k=j; k>0 && disk[i].chainee.enregistrement[k].ID<disk[i].chainee.enregistrement[k-1].ID; k--) {
                         Enregistrement temp = disk[i].chainee.enregistrement[k];
                         disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k-1];
                         disk[i].chainee.enregistrement[k-1] = temp;
                     }
                 }
-            } else { // Fill the block without sorting
+            }
+            else { // Fill the block without sorting
                 for (int j=0 ;j<BLOCK_SIZE; j++) {
                     disk[i].chainee.enregistrement[j].ID = fileID*BLOCK_SIZE+j+1;
                     snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID*BLOCK_SIZE+j+1);
-                    disk[i].chainee.enregistrement[j].Supprime = false;}}
-            if ((fileID+1)*BLOCK_SIZE<=(i+1)*BLOCK_SIZE) { // Stop filling when the file is filled completely
-                break;}}}
-     printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");}}
-
+                    disk[i].chainee.enregistrement[j].Supprime = false;
+                    }
+                }
+            if ((fileID+1)*BLOCK_SIZE<=(i+1)*BLOCK_SIZE) // Stop filling when the file is filled completely
+                break;
+        }
+    }
+     printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
 }
-
 
 //7 Charger un Fichier
 void loadFile(int fileID) {// Check if the file ID is valid
@@ -185,7 +120,7 @@ void loadFile(int fileID) {// Check if the file ID is valid
 }
 
 
-//8 Ins√©rer un Enregistrement (Tri√© et Non Tri√©)
+//8 InsÈrer un Enregistrement (TriÈ et Non TriÈ)
 void insertRecord(int fileID, Enregistrement record, bool isSorted) {
     if (isSorted) { // find the correct position for sorted insertion
         for (int i = 0; i < MAX_BLOCKS; i++) {
@@ -215,7 +150,7 @@ void insertRecord(int fileID, Enregistrement record, bool isSorted) {
                         printf("Record inserted in unsorted order in file %d at block %d, position %d.\n", fileID, i, j);
                         return;
                     }
-                } 
+                }
                 if (disk[i].chainee.next == -1) {// If the block is full, move to the next block
                     printf("Error: No space left to insert the record in unsorted order for file %d.\n", fileID);
                     return;
@@ -249,8 +184,6 @@ void deleteRecordLogical(int fileID, int recordID) {
     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
 
-
-
 //10 Suppression Physique d'un Enregistrement
 void deleteRecordPhysical(int fileID, int recordID) {
    if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Check if the file ID is valid
@@ -275,9 +208,7 @@ void deleteRecordPhysical(int fileID, int recordID) {
     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
 
-
-
-//11 D√©fragmentation d'un Fichier
+//11 DÈfragmentation d'un Fichier
 void defragmentFile(int fileID) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
@@ -306,10 +237,7 @@ void defragmentFile(int fileID) {
     printf("File %d defragmented.\n", fileID);
 }
 
-
-
-
-//12  
+//12
 void deleteFile(int fileID) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) {// Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
@@ -328,3 +256,6 @@ void deleteFile(int fileID) {
 
     printf("File %d deleted.\n", fileID);
 }
+
+
+
