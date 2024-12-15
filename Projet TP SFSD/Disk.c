@@ -249,12 +249,6 @@ void ChargerFichier(int fileID, fichier *F) {
                 freeBlockCount++;
             }
         }
-        int freeBlockCount = 0;
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (disk[i].contigue.free) {
-                freeBlockCount++;
-            }
-        }
         MajEntetenum(F, 5, freeBlockCount); // Update metadata for the number of free blocks
     }
 }
