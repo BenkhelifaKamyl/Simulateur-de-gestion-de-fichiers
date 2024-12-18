@@ -202,4 +202,17 @@ void EcrireBloc(fichier *F, int i, Bloc Buffer){
     memcpy(&disk[i], &Buffer, sizeof(Bloc));
 }
 }
-
+void fermerFichier(fichier F){
+    fclose(F.file);
+    fclose(F.MDfile);
+}
+int AllouerBloc(){
+    int i=0;
+    bool check=false;
+    while(check==false && i<MAX_BLOCKS){
+        if(disk[i].chainee.free=true)
+            return i;
+    }
+    printf("\nAucun bloc n'est libre!");
+    return -1;
+}
