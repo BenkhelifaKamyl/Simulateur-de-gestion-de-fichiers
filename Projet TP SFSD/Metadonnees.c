@@ -18,7 +18,7 @@ MetaDonnee creationFichier(char filename[30]){
     do{
         scanf("%d",&orgGlobale);
         if (orgGlobale != 1 && orgGlobale != 2)
-            printf("Entrée invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
+            printf("EntrÃ©e invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
     } while(orgGlobale!=2 && orgGlobale!=1);
     if(orgGlobale==1)
         MD.globalOrg = Chainee;
@@ -28,7 +28,7 @@ MetaDonnee creationFichier(char filename[30]){
     do{
         scanf("%d",&orgInterne);
         if (orgInterne != 1 && orgInterne != 2)
-            printf("Entrée invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
+            printf("EntrÃ©e invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
     } while(orgInterne!=2 && orgInterne!=1);
     if(orgInterne==1)
         MD.interneOrg = triee;
@@ -208,11 +208,9 @@ void fermerFichier(fichier F){
 }
 int AllouerBloc(){
     int i=0;
-    bool check=false;
-    while(check==false && i<MAX_BLOCKS){
-        if(disk[i].chainee.free=true)
-            return i;
-    }
-    printf("\nAucun bloc n'est libre!");
+    while(disk[i].chainee.free==false)
+        i++;
+    if(i<MAX_BLOCKS)
+        return i;
     return -1;
 }
