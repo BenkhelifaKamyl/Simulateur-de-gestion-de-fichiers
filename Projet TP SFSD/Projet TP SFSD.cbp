@@ -28,9 +28,11 @@
 		<Unit filename="Disk.h" />
 		<Unit filename="Metadonnees.c">
 			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="Metadonnees.h" />
+		<Unit filename="Projet TP SFSD.cbp" />
+		<Unit filename="Projet TP SFSD.depend" />
+		<Unit filename="Projet TP SFSD.layout" />
 		<Unit filename="TableIndex.c">
 			<Option compilerVar="CC" />
 		</Unit>

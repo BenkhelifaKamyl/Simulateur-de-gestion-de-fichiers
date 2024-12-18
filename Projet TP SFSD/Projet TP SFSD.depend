@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1734084049 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.c
+1734461675 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -11,9 +11,9 @@
 
 1733481913 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\textcolor.h
 
-1733863031 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\metadonnees.h
+1734460132 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\metadonnees.h
 
-1734084007 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\tableindex.h
+1734460091 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\tableindex.h
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -22,9 +22,9 @@
 	"Metadonnees.h"
 	"Disk.h"
 
-1734083281 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.h
+1734461516 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.h
 
-1734083960 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\main.c
+1734461430 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -48,4 +48,14 @@
 	<stdio.h>
 	<stdlib.h>
 	"TextColor.h"
+
+1734461756 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\metadonnees.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+	"TextColor.h"
+	"Metadonnees.h"
+	"TableIndex.h"
+	"Disk.h"
 

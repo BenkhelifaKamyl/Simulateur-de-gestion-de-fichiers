@@ -32,7 +32,7 @@ void initializeDiskContigue();
 void compactDisk();
 void clearDisk();
 bool checkBlock(int blockID);
-void fillFile(int fileID, bool isSorted);
+void fillFile(int fileID, bool isSorted, fichier *F);
 void loadFile(int fileID);
 void insertRecord(int fileID, Enregistrement record, bool isSorted);
 void deleteRecordLogical(int fileID, int recordID);

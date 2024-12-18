@@ -32,6 +32,7 @@ void rechercheEnregistrementNonDense();
 //Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
 void MajTableIndexDense();
 void MajTableIndexNonDense();
+void clearIndexTable(fichier *F); // Update the index table: clear the entries, as all blocks are free
 
 
 

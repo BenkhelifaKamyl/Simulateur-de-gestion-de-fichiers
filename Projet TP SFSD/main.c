@@ -7,16 +7,37 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-Bloc disk[MAX_BLOCKS];    // Disque virtuel avec des blocs
-MetaDonnee files[MAX_FILES];   // Tableau des fichiers et leurs métadonnées
-int fileCount = 0;           // Nombre de fichiers actuellement créés
 
 
+
+void menu(){
+    int c=0,k=0, nbE;
+    char filename;
+    if(k==0){
+        printf("Bienvenue dans le simulateur de gestion de fichiers!!!\n\n");
+        initializeDiskChainee();
+        k++;
+    }
+    while(c!=12){
+        printf("\nChoisissez ce que vous voulez faire:\n 1)Creer un fichier, 2)Afficher la memoire secondaire, \n3) Afficher les metadonnees des fichiers, 4) Rechercher un enregistrement, \n5) Inserer un enregistrement, 6) Supprimer un enregistrement, \n7) Defragmenter un fichier, 8) Supprimer un fichier, \n9) Renommer un fichier, 10) Compactage de la memoire secondaire, \n11) Vider la memoire secondaire, 12) Quitter le programme.\n");
+        scanf("%d",&c);
+        switch (c){
+        case 1:
+            printf("\nEntrez le nom de votre fichier: ");
+            scanf("%s",filename);
+            creationFichier(filename);
+
+
+        }
+    }
+
+
+}
 
 
 int main()
 {
-    fichier F;
+    /*fichier F;
     F.MDfile = fopen("MetaDat.bin","rb+");
     MajEntetenom(&F,"MetaDat.bin");
     MajEntetenum(&F,2,4);
@@ -25,6 +46,7 @@ int main()
     MajeEnteteOrga(&F,1);
     MajeEntetetri(&F,2);
     AfficherEntete(F);
-    fclose(F.MDfile);
+    fclose(F.MDfile);*/
+    menu();
     return 0;
 }

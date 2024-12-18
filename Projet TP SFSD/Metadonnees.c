@@ -153,7 +153,7 @@ void AfficherEntete(fichier F){
     else
         printf("\nOrganisation interne: Non triee");
 }
-/*void OuvrirFichier(fichier *F,char nomFichier[30], char mode){
+void OuvrirFichier(fichier *F,char nomFichier[30], char mode){
     Bloc Buffer;
     MetaDonnee MD = creationFichier(nomFichier);
     char nomMD[46];
@@ -168,17 +168,18 @@ void AfficherEntete(fichier F){
         }
         F->file = fopen(nomFichier, "wb+");
         if(F->file!=NULL){
-            Bloc Buffer;
-
+            if(MD.interneOrg==typeTri.triee)
+                fillFile(-1,true,&F);
+            else
+                fillFile(-1,false,&F);
         }
-
     }
     else if(mode=='r'){
         F->MDfile = fopen(nomMD,"rb+");
         if(f->MDfile!=NULL){
         fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
         }
-        F->file = fopen(nomFichier, "wb+");
+        F->file = fopen(nomFichier, "rb+");
     }
     else{
         printf("Ce mode d'ouverture n'existe pas.\n");
@@ -199,6 +200,6 @@ void EcrireBloc(fichier *F, int i, Bloc Buffer){
     fseek(F->file,sizeof(MetaDonnee)+ (i-1)*sizeof(Bloc), SEEK_SET); //Ecrire dans le bloc i
     fwrite(&Buffer, sizeof(Bloc),1,F->file);
     memcpy(&disk[i], &Buffer, sizeof(Bloc));
-}*/
-
+}
+}
 
