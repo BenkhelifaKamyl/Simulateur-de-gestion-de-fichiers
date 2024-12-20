@@ -1,6 +1,5 @@
 #ifndef METADONNEES_H_INCLUDED
 #define METADONNEES_H_INCLUDED
-
 typedef enum { Contigue, Chainee } typeOrganisation;
 typedef enum {triee, nonTriee} typeTri;
 
@@ -29,8 +28,8 @@ void MajeEnteteOrga(fichier *F, int nc); //1 pour chainee 2 pour contigue
 void MajeEntetetri(fichier *F, int nc); //1 pour triee et 2 pour non triee
 void AfficherEntete(fichier F); //Affiche le fichier de metadonnee
 void OuvrirFichier(fichier *F, char nomFichier[30], char mode);
-void fermerFichier(fichier *F);
-void LireBloc(fichier *F, int i, Bloc *Buffer);
-void EcrireBloc(fichier *F, int i, Bloc Buffer);
-void AllouerBloc();
+void fermerFichier(fichier F);
+//void LireBloc(fichier *F, int i, Bloc *Buffer);
+//void EcrireBloc(fichier *F, int i, Bloc Buffer);
+int AllouerBloc();
 #endif // METADONNEES_H_INCLUDED

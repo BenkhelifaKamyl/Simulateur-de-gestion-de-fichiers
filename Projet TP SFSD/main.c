@@ -35,6 +35,7 @@ void menu(){
 }
 
 
+
 int main()
 {
     /*fichier F;
@@ -47,6 +48,16 @@ int main()
     MajeEntetetri(&F,2);
     AfficherEntete(F);
     fclose(F.MDfile);*/
-    menu();
+    //menu();
+    //AfficherMS();
+    initializeDiskChainee();
+    strcpy(disk[5].chainee.enregistrement[0].Data, "Kamyl");
+    strcpy(disk[5].chainee.enregistrement[1].Data, "Kamyl");
+    strcpy(disk[95].chainee.enregistrement[0].Data, "Kamyl");
+    strcpy(disk[95].chainee.enregistrement[1].Data, "Kamyl");
+    strcpy(disk[95].chainee.enregistrement[2].Data, "Kamyl");
+    disk[5].chainee.free=false;
+    disk[95].chainee.free=false;
+    AfficherDisque();
     return 0;
 }

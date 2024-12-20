@@ -18,7 +18,7 @@ MetaDonnee creationFichier(char filename[30]){
     do{
         scanf("%d",&orgGlobale);
         if (orgGlobale != 1 && orgGlobale != 2)
-            printf("EntrÃ©e invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
+            printf("Entrée invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
     } while(orgGlobale!=2 && orgGlobale!=1);
     if(orgGlobale==1)
         MD.globalOrg = Chainee;
@@ -28,7 +28,7 @@ MetaDonnee creationFichier(char filename[30]){
     do{
         scanf("%d",&orgInterne);
         if (orgInterne != 1 && orgInterne != 2)
-            printf("EntrÃ©e invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
+            printf("Entrée invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
     } while(orgInterne!=2 && orgInterne!=1);
     if(orgInterne==1)
         MD.interneOrg = triee;
@@ -168,7 +168,7 @@ void OuvrirFichier(fichier *F,char nomFichier[30], char mode){
         }
         F->file = fopen(nomFichier, "wb+");
         if(F->file!=NULL){
-            if(MD.interneOrg==typeTri.triee)
+            if(MD.interneOrg==triee)
                 fillFile(-1,true,&F);
             else
                 fillFile(-1,false,&F);
@@ -176,7 +176,7 @@ void OuvrirFichier(fichier *F,char nomFichier[30], char mode){
     }
     else if(mode=='r'){
         F->MDfile = fopen(nomMD,"rb+");
-        if(f->MDfile!=NULL){
+        if(F->MDfile!=NULL){
         fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
         }
         F->file = fopen(nomFichier, "rb+");

@@ -26,19 +26,24 @@ typedef union { //permet de regrouper les deux types de blocs dans une seule str
 } Bloc;
 
 Bloc disk[MAX_BLOCKS];    // Disque virtuel avec des blocs
-
+void AfficherDisque();
+void initializeBlockChainee(int i);
+void initializeBlockContigue(int i);
 void initializeDiskChainee();
 void initializeDiskContigue();
-void compactDisk();
-void clearDisk();
+void compactDisk(fichier *F);
+void clearDisk(fichier *F);
 bool checkBlock(int blockID);
 void fillFile(int fileID, bool isSorted, fichier *F);
-void loadFile(int fileID);
+void ChargerFichier(int fileID, fichier *F);
 void insertRecord(int fileID, Enregistrement record, bool isSorted);
 void deleteRecordLogical(int fileID, int recordID);
 void deleteRecordPhysical(int fileID, int recordID);
-void defragmentFile(int fileID);
-void deleteFile(int fileID);
+void SuppressionLogique(fichier *F, int recordId);
+void SuppressionPhysique(fichier *F, int recordId);
+int rechercheEnregistrement(fichier *F, int recordId);
+void Defragmentation(fichier *F);
+void deleteFile(int fileID, fichier *F);
 
 
 #endif // DISK_H_INCLUDED
