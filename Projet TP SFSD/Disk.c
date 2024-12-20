@@ -6,41 +6,65 @@
 #include "Metadonnees.h"
 #include "TableIndex.h"
 #include "Disk.h"
+// Initialisation d'un bloc pour l'organisation cha√Æn√©e
+void initializeBlockChainee(int i) {
+    disk[i].chainee.free = true;
+    disk[i].chainee.next = -1;
+    memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);
+}
 
+// Initialisation d'un bloc pour l'organisation contigu√´
+void initializeBlockContigue(int i) {
+    disk[i].contigue.free = true;
+    memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE);
+}
 
-
-// Initialisation pour l'organisation chaÓnÈe
+// Initialisation du disque en mode cha√Æn√©
 void initializeDiskChainee() {
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        disk[i].chainee.free = true;           // Marque tous les blocs comme libres
-        disk[i].chainee.next = -1;             // Pas de bloc suivant initialement
-        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE); // Vide les donnÈes du bloc
+    if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
+        printf("Erreur : configuration de disque invalide.\n");
+        return;
     }
-    printf("Disk initialized with %d blocks in chained mode.\n", MAX_BLOCKS);
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        initializeBlockChainee(i);
+    }
+    printf("Disque initialis√© avec %d blocs en mode cha√Æn√©.\n", MAX_BLOCKS);
 }
 
-// Initialisation pour l'organisation contiguÎ
+// Initialisation du disque en mode contigu√´
 void initializeDiskContigue() {
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        disk[i].contigue.free = true;         // Marque tous les blocs comme libres
-        memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE); // Vide les donnÈes du bloc
+    if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
+        printf("Erreur : configuration de disque invalide.\n");
+        return;
     }
-    printf("Disk initialized with %d blocks in contiguous mode.\n", MAX_BLOCKS);
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        initializeBlockContigue(i);
+    }
+    printf("Disque initialis√© avec %d blocs en mode contigu√´.\n", MAX_BLOCKS);
 }
-//3 Compactage du Disque
+// Compactage du Disque avec Buffer
 void compactDisk(fichier *F) {
+    bloc_chainee buffer; // Buffer temporaire pour le d√©placement
     int lastFreeBlock = -1;
+
     for (int i = 0; i < MAX_BLOCKS; i++) {
         if (disk[i].chainee.free) {
-            lastFreeBlock = i;
+            if (lastFreeBlock == -1) lastFreeBlock = i;  // Trouve le premier bloc libre
         } else if (lastFreeBlock != -1) {
-            // DÈplace le bloc non libre pour combler l'espace
-            disk[lastFreeBlock] = disk[i];
-            disk[i].chainee.free = true;
-            disk[lastFreeBlock].chainee.next = -1;
-     // Mise ‡ jour de la table d'index
-    MajTableIndex(F, i, lastFreeBlock);
-    // Trouver le prochain bloc libre
+            // Utilise le buffer temporaire
+            buffer = disk[i].chainee;
+
+            // D√©place le bloc dans l'espace libre
+            disk[lastFreeBlock].chainee = buffer;
+
+            // Lib√®re l'ancien bloc
+            disk[i].chainee.free = 1;
+            disk[i].chainee.next = -1;
+
+            // Met √† jour l'index du fichier
+            MajTableIndex(F, i, lastFreeBlock);
+
+            // Trouve le prochain bloc libre
             for (int j = lastFreeBlock + 1; j < MAX_BLOCKS; j++) {
                 if (disk[j].chainee.free) {
                     lastFreeBlock = j;
@@ -49,36 +73,46 @@ void compactDisk(fichier *F) {
             }
         }
     }
-    // Mettre ‡ jour les mÈtadonnÈes
+
+    // Met √† jour les m√©tadonn√©es
     int premiereAdresse = -1;
     int nbBlocsUtilises = 0;
+
     for (int i = 0; i < MAX_BLOCKS; i++) {
         if (!disk[i].chainee.free) {
             if (premiereAdresse == -1) premiereAdresse = i;
             nbBlocsUtilises++;
         }
     }
-    // Mettre ‡ jour les entÍtes dans le fichier de mÈtadonnÈes
-    MajEntetenum(F, 4, premiereAdresse);  // Met ‡ jour premiereAdresse
-    MajEntetenum(F, 2, nbBlocsUtilises); // Met ‡ jour nbBlocs
+
+    MajEntetenum(F, 4, premiereAdresse);  // Met √† jour premiereAdresse
+    MajEntetenum(F, 2, nbBlocsUtilises); // Met √† jour nbBlocs
+
     printf("Disk compacted.\n");
 }
-//4 Vider la MÈmoire Secondaire
+// 4 Vider la M√©moire Secondaire
 void clearDisk(fichier *F) {
+    // Clear all blocks by setting them as free
     for (int i = 0; i < MAX_BLOCKS; i++) {
         disk[i].chainee.free = true;
-        disk[i].chainee.next = -1;
-        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);
+        disk[i].chainee.next = -1;  // Reset the next pointer for chained blocks
+        memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);  // Clear the block content
     }
-    // Update the metadata
+
+    // Update the metadata to reflect the cleared disk
     MajEntetenum(F, 2, 0);  // Set the number of blocks to 0
     MajEntetenum(F, 3, 0);  // Set the number of records to 0
     MajEntetenum(F, 4, 0);  // Set the first address to 0
+
     // Update the index table: clear the entries, as all blocks are free
     clearIndexTable(F);
+
+    // Print confirmation message
     printf("Disk cleared.\n");
 }
-//5VÈrification d'un Bloc
+
+
+//5V√©rification d'un Bloc
 bool checkBlock(int blockID) {
     if (blockID >= 0 && blockID < MAX_BLOCKS) {
         return !disk[blockID].chainee.free;
@@ -86,270 +120,467 @@ bool checkBlock(int blockID) {
     return false;
 }
 
-//6Remplir un Fichier (TriÈ et Non TriÈ)
-void fillFile(int fileID, bool isSorted, fichier *F) { ***Manque le cas d'une organisation contigue
-    int recordsFilled = 0;  // Total number of records filled in the file
-    int blocksUsed = 0;
-    int firstBlockAddress = -1;  // Address of the first block used
-**** Une boucle while serait plus appropriee pour s'arreter des qu'on trouve le premier bloc libre     for (int i = 0; i < MAX_BLOCKS; i++) { // Find the first free block
-        if (disk[i].chainee.free) {
-            disk[i].chainee.free = false;  // Mark the block as used
-            if (firstBlockAddress == -1)// Set the first block address if it's the first block being used
-                firstBlockAddress = i;
-            if (isSorted) { // Fill the block with records
-                for (int j = 0; j < BLOCK_SIZE; j++) { // Sorted insertion logic
-                    disk[i].chainee.enregistrement[j].ID = fileID * BLOCK_SIZE + j + 1;
-                    snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID * BLOCK_SIZE + j + 1);
-                    disk[i].chainee.enregistrement[j].Supprime = false;
-                    // Sort records in the block
-                    for (int k = j; k > 0 && disk[i].chainee.enregistrement[k].ID < disk[i].chainee.enregistrement[k - 1].ID; k--) {
-                        Enregistrement temp = disk[i].chainee.enregistrement[k];
-                        disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k - 1];
-                        disk[i].chainee.enregistrement[k - 1] = temp;
-                    }
+
+// Fill a File (Sorted or Unsorted) Using a Buffer
+void fillFile(int fileID, bool isSorted, fichier *F) {
+    const int BUFFER_SIZE = BLOCK_SIZE;
+    Enregistrement buffer[BUFFER_SIZE];  // Declare buffer
+    int recordsFilled = 0;  
+    int blocksUsed = 0;     
+    int firstBlockAddress = -1;  
+    int lastBlockAddress = -1;  
+    int bufferIndex = 0; 
+
+    // Fill buffer with records
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+        buffer[i].ID = fileID * BUFFER_SIZE + i + 1;
+        snprintf(buffer[i].Data, sizeof(buffer[i].Data), "Record_%d", buffer[i].ID);
+        buffer[i].Supprime = false;
+    }
+
+    // Sort the buffer if required
+    if (isSorted) {
+        for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+            for (int j = i + 1; j < BUFFER_SIZE; j++) {
+                if (buffer[j].ID < buffer[i].ID) {
+                    Enregistrement temp = buffer[i];
+                    buffer[i] = buffer[j];
+                    buffer[j] = temp;
                 }
-            } else { // Unsorted insertion logic
-                for (int j = 0; j < BLOCK_SIZE; j++) {
-                    disk[i].chainee.enregistrement[j].ID = fileID * BLOCK_SIZE + j + 1;
-                    snprintf(disk[i].chainee.enregistrement[j].Data, 100, "Record_%d", fileID * BLOCK_SIZE + j + 1);
-                    disk[i].chainee.enregistrement[j].Supprime = false;
-                }
-            }
-            recordsFilled += BLOCK_SIZE; // Update the number of records and blocks used
-            blocksUsed++;
-            // Update the index table to reflect that this block is occupied by the file
-*****            F->indexTable[i] = fileID; // Cette structure n'existe pas, utiliser les fonctions de la table d'index svp
-            if (recordsFilled >= fileID * BLOCK_SIZE) { // Stop filling when the total number of records is reached
-                break;
             }
         }
     }
-    // Update metadata based on the filled file
-    MajEntetenum(F, 3, recordsFilled); // Update the number of records filled
-    MajEntetenum(F, 2, blocksUsed);     // Update the number of blocks used
-    MajEntetenum(F, 4, firstBlockAddress); // Update the first block address (if needed)
+
+    // Insert records from buffer into the disk
+    for (int i = 0; i < MAX_BLOCKS && bufferIndex < BUFFER_SIZE; i++) {
+        if (disk[i].chainee.free) {
+            disk[i].chainee.free = false;
+            blocksUsed++;
+
+            // Update the first and last block addresses
+            if (firstBlockAddress == -1)
+                firstBlockAddress = i;
+
+            if (lastBlockAddress != -1)
+                disk[lastBlockAddress].chainee.next = i;
+
+            lastBlockAddress = i;
+
+            // Copy buffer records to the current disk block
+            for (int j = 0; j < BLOCK_SIZE && bufferIndex < BUFFER_SIZE; j++) {
+                disk[i].chainee.enregistrement[j] = buffer[bufferIndex++];
+                recordsFilled++;
+            }
+        }
+    }
+
+    // Update metadata
+    MajEntetenum(F, 3, recordsFilled);     // Number of records
+    MajEntetenum(F, 2, blocksUsed);        // Number of blocks used
+    MajEntetenum(F, 4, firstBlockAddress); // First block address
+
     printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
 }
-
-
-//7 Charger un Fichier
 void ChargerFichier(int fileID, fichier *F) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
     }
+
     int allocatedBlocks = 0;
     int firstBlockAddress = -1;
     bool needsDefrag = false;
     bool needsCompaction = false;
     int lastFileBlock = -1;
+
+    // Temporary buffer to store records before writing to disk block
+    Enregistrement buffer[BLOCK_SIZE];
+
     // Step 1: Traverse the disk and allocate blocks based on the allocation table (index table)
     for (int i = 0; i < MAX_BLOCKS; i++) {
         // Check if the current block is already allocated to the file in the index table
-*****Mauvaise utilisation des structures        if (F->indexTable[i] == fileID) {
-            if (disk[i].contigue.free) { // If the block is free, allocate it
-                disk[i].contigue.free = false;
-                for (int j = 0; j < BLOCK_SIZE; j++) { // Initialize the records in this block
-                    disk[i].contigue.enregistrement[j].ID = fileID * BLOCK_SIZE + j + 1; // Set the record ID
-                    disk[i].contigue.enregistrement[j].Supprime = false; // Logical deletion set to false
-                    memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data)); // Clear data
-                }
-                if (firstBlockAddress == -1) { // If this is the first block, update the first block address in the metadata
+        if (F->indexTable[i] == fileID) {
+            if (disk[i].free) { // If the block is free
+                disk[i].free = false; // Mark it as allocated
+
+                // Set the first block address if it's the first allocated block
+                if (firstBlockAddress == -1) {
                     firstBlockAddress = i;
+                } else {
+                    // Link the previous block to the current block in the chain
+                    disk[lastFileBlock].next = i;
                 }
+
+                // Prepare the buffer with records for this block
+                for (int j = 0; j < BLOCK_SIZE; j++) {
+                    buffer[j].ID = fileID * BLOCK_SIZE + j + 1;
+                    snprintf(buffer[j].Data, sizeof(buffer[j].Data), "Record_%d", buffer[j].ID);
+                    buffer[j].Supprime = false; // Mark the record as not deleted
+                }
+
+                // Now write the buffer into the current block
+                for (int j = 0; j < BLOCK_SIZE; j++) {
+                    disk[i].enregistrement[j] = buffer[j];
+                }
+
+                // Set the current block as the last block for linking in the next iteration
+                lastFileBlock = i;
                 allocatedBlocks++;
                 printf("Block %d allocated for file %d.\n", i, fileID);
+
+                // If this is the last block for the file, mark the next pointer as -1
+                if (i == MAX_BLOCKS - 1 || F->indexTable[i + 1] != fileID) {
+                    disk[i].next = -1; // End of chain
+                }
             }
         }
-    // Step 2: Check if any blocks were allocated
+    }
+
+    // Step 2: Check if no blocks were allocated
     if (allocatedBlocks == 0) {
         printf("Error: No blocks available for file %d.\n", fileID);
+        return;
     } else {
         printf("File %d loaded with %d blocks allocated.\n", fileID, allocatedBlocks);
-        // Step 3: Update the metadata after loading the file
-        MajEntetenum(F, 2, allocatedBlocks); // Update metadata for block count
-        MajEntetenum(F, 3, allocatedBlocks * BLOCK_SIZE); // Update metadata for record count
-        MajEntetenum(F, 4, firstBlockAddress); // Update metadata for first block address
-        // Step 4: Check for fragmentation (block-level and record-level)
-        bool fragmented = false;
-        lastFileBlock = -1;
-        // Check if there are gaps between allocated blocks for the file (block-level fragmentation)
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-    //        if (F->indexTable[i] == fileID) { // Block is allocated
-                if (lastFileBlock != -1 && i != lastFileBlock + 1) {
-                    fragmented = true;
-                    break;
-                }
-                lastFileBlock = i;
-            }
-        }
-        // If fragmented, propose defragmentation
-*****Variable inexistante        if (fragmented) {
-            printf("File %d is fragmented. Defragmentation suggested.\n", fileID);
-            needsDefrag = true;
-        // Step 5: Check for compaction opportunities (free blocks)
-        needsCompaction = false;
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-//            if (disk[i].contigue.free && F->indexTable[i] != fileID) { // Free block not allocated to file
-                needsCompaction = true;
+    }
+
+    // Step 3: Update the metadata after loading the file
+    MajEntetenum(F, 2, allocatedBlocks); // Update metadata for block count
+    MajEntetenum(F, 3, allocatedBlocks * BLOCK_SIZE); // Update metadata for record count
+    MajEntetenum(F, 4, firstBlockAddress); // Update metadata for first block address
+
+    // Step 4: Check for fragmentation (block-level fragmentation)
+    bool fragmented = false;
+    lastFileBlock = -1;
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (F->indexTable[i] == fileID) { // Block is allocated
+            if (lastFileBlock != -1 && i != lastFileBlock + 1) {
+                fragmented = true; // Fragmentation detected
                 break;
             }
-
-//        if (needsCompaction) {
-            printf("File %d has free blocks. Compaction suggested.\n", fileID);
-
-        // Step 6: Update the index table to reflect which blocks belong to the file
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (!disk[i].contigue.free) { // If the block is no longer free, it's allocated to this file
-*****Variable inexistante                F->indexTable[i] = fileID;
-            }
+            lastFileBlock = i;
         }
+    }
 
-        // Step 7: Update the metadata (e.g., number of free blocks, file status)
-        // You can update additional metadata fields here based on your needs, such as free space on disk
-        int freeBlockCount = 0;
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (disk[i].contigue.free) {
-                freeBlockCount++;
-            }
+    if (fragmented) {
+        printf("File %d is fragmented. Defragmentation suggested.\n", fileID);
+        needsDefrag = true;
+    }
+
+    // Step 5: Check for free blocks and suggest compaction
+    needsCompaction = false;
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (disk[i].free && F->indexTable[i] != fileID) { // Check if block is free and not allocated to the file
+            needsCompaction = true;
+            break;
         }
-        MajEntetenum(F, 5, freeBlockCount); // Update metadata for the number of free blocks
     }
+
+    if (needsCompaction) {
+        printf("File %d has free blocks. Compaction suggested.\n", fileID);
     }
+
+    // Step 6: Update the index table for blocks allocated to the file
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (!disk[i].free && F->indexTable[i] == -1) { // Block is allocated and not yet in indexTable
+            F->indexTable[i] = fileID; // Set the file ID for this block in the index table
+        }
+    }
+
+    // Step 7: Update metadata (e.g., free block count)
+    int freeBlockCount = 0;
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (disk[i].free) {
+            freeBlockCount++;
+        }
+    }
+    MajEntetenum(F, 5, freeBlockCount); // Update metadata for the number of free blocks
 }
-//8 InsÈrer un Enregistrement (TriÈ et Non TriÈ)
+
+// 8. Insert a Record (Sorted and Unsorted)
 void insertRecord(int fileID, Enregistrement record, bool isSorted) {
-    if (isSorted) { // find the correct position for sorted insertion
+    if (fileID < 0 || fileID >= MAX_BLOCKS) {
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+
+    int blocksUsed = 0;
+    int lastBlockAddress = -1;
+
+    if (isSorted) { // Insert in sorted order
         for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (!disk[i].chainee.free) { // Check if the block belongs to the file
-                for (int j = 0; j < BLOCK_SIZE; j++) { // Find the correct position
-                    if (disk[i].chainee.enregistrement[j].ID== 0 || record.ID<disk[i].chainee.enregistrement[j].ID) { // Correct position
-                        for (int k = BLOCK_SIZE - 1; k > j; k--) {      // Shift records to make space for the new record
-                            disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k-1];}
-                        disk[i].chainee.enregistrement[j] = record; // Insert the new record
+            if (disk[i].chainee.free) {
+                continue; // Skip free blocks
+            }
+
+            if (disk[i].chainee.next == -1) { // If we're at the end of the chain, check if there's space in the block
+                for (int j = 0; j < BLOCK_SIZE; j++) {
+                    if (disk[i].chainee.enregistrement[j].ID == 0 || record.ID < disk[i].chainee.enregistrement[j].ID) {
+                        // Found the correct position
+                        for (int k = BLOCK_SIZE - 1; k > j; k--) {  // Shift records to make space
+                            disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k - 1];
+                        }
+                        disk[i].chainee.enregistrement[j] = record;  // Insert the new record
                         printf("Record inserted in sorted order in file %d at block %d, position %d.\n", fileID, i, j);
+                        // Update the index table
+                        F->indexTable[i] = fileID; // Mark the block as allocated to the file
+                        blocksUsed++;
+                        lastBlockAddress = i;
+                        MajEntetenum(F, 2, blocksUsed); // Update metadata for block count
+                        MajEntetenum(F, 3, blocksUsed * BLOCK_SIZE); // Update metadata for record count
                         return;
                     }
                 }
-                if (disk[i].chainee.next == -1) { // If the block is full, move to the next block
+                if (disk[i].chainee.next == -1) { // Block is full and no next block exists
                     printf("Error: No space left to insert the record in sorted order for file %d.\n", fileID);
                     return;
                 }
             }
         }
-    } else { // Insert without sorting
+    } else { // Insert without sorting (unsorted)
         for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (!disk[i].chainee.free) { // Check if the block belongs to the file
-                for (int j = 0; j < BLOCK_SIZE; j++) {
-                    if (disk[i].chainee.enregistrement[j].ID == 0) {
-                        disk[i].chainee.enregistrement[j] = record;
-                        printf("Record inserted in unsorted order in file %d at block %d, position %d.\n", fileID, i, j);
-                        return;
-                    }
+            if (disk[i].chainee.free) {
+                continue; // Skip free blocks
+            }
+
+            // Find the first available space for the record in this block
+            for (int j = 0; j < BLOCK_SIZE; j++) {
+                if (disk[i].chainee.enregistrement[j].ID == 0) {  // Empty slot found
+                    disk[i].chainee.enregistrement[j] = record;
+                    printf("Record inserted in unsorted order in file %d at block %d, position %d.\n", fileID, i, j);
+                    // Update the index table
+                    F->indexTable[i] = fileID; // Mark the block as allocated to the file
+                    blocksUsed++;
+                    lastBlockAddress = i;
+                    MajEntetenum(F, 2, blocksUsed); // Update metadata for block count
+                    MajEntetenum(F, 3, blocksUsed * BLOCK_SIZE); // Update metadata for record count
+                    return;
                 }
-                if (disk[i].chainee.next == -1) {// If the block is full, move to the next block
+            }
+
+            if (disk[i].chainee.next == -1) { // If the block is full, move to the next block
+                // Find the next available block in the chain (if any)
+                int nextBlock = disk[i].chainee.next;
+                if (nextBlock == -1) {
+                    // Add a new block
+                    for (int j = 0; j < MAX_BLOCKS; j++) {
+                        if (disk[j].chainee.free) {
+                            disk[j].chainee.free = false;
+                            disk[i].chainee.next = j; // Link to the new block
+                            F->indexTable[j] = fileID; // Update the index table for the new block
+                            blocksUsed++;
+                            lastBlockAddress = j;
+                            printf("New block %d allocated and linked to block %d for file %d.\n", j, i, fileID);
+                            return;
+                        }
+                    }
                     printf("Error: No space left to insert the record in unsorted order for file %d.\n", fileID);
                     return;
                 }
+                i = nextBlock - 1; // Set i to the next block's index (will increment on the next loop iteration)
             }
         }
     }
     printf("Error: File %d not found or no space available.\n", fileID);
 }
-
-
-//9Suppression Logique d'un Enregistrement
+// 9. Logical Deletion of a Record
 void deleteRecordLogical(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {    // Check if the file ID is valid
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
-    for (int i = 0; i < MAX_BLOCKS; i++) {    // find the record
-        if (!disk[i].contigue.free) { // Check if the block is in use
-            for (int j = 0; j < BLOCK_SIZE; j++) {
-                if (disk[i].contigue.enregistrement[j].ID == recordID) { // Check if the record matches the given record ID
-                    disk[i].contigue.enregistrement[j].Supprime = true; // Mark the record as logically deleted
-                    printf("Record %d in file %d marked as logically deleted.\n", recordID, fileID);
-                    return;
-                }
-            }
-        }
-    }
-    // If the record is not found
-    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
-}
-
-//10 Suppression Physique d'un Enregistrement
-void deleteRecordPhysical(int fileID, int recordID) {
-   if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Check if the file ID is valid
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
-    for (int i = 0; i < MAX_BLOCKS; i++) { //find the record
-        if (!disk[i].contigue.free) { // Check if the block is in use
-            for (int j = 0; j < BLOCK_SIZE; j++) {
-                if (disk[i].contigue.enregistrement[j].ID == recordID) { // Check if the record matches the given record ID
-                    // Remove the record by resetting its fields
-                    disk[i].contigue.enregistrement[j].ID = -1;
-                    disk[i].contigue.enregistrement[j].Supprime = false;
-                    memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
-                    printf("Record %d in file %d physically deleted.\n", recordID, fileID);
-                    return;
-                }
-            }
-        }
-    }
-    // If the record is not found
-    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
-}
-
-//11 DÈfragmentation d'un Fichier
-void defragmentFile(int fileID) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
     }
-    for (int i = 0; i < MAX_BLOCKS; i++) { // Iterate through the disk to compact the file's records
-        if (!disk[i].contigue.free) { // Check if the block is in use
-            int writeIndex = 0;
-            for (int j = 0; j < BLOCK_SIZE; j++) {
-                // Move non-deleted records to fill gaps
-                if (!disk[i].contigue.enregistrement[j].Supprime) {
-                    if (writeIndex != j) {
-                        disk[i].contigue.enregistrement[writeIndex] = disk[i].contigue.enregistrement[j];
-                    }
-                    writeIndex++;
+
+    for (int i = 0; i < MAX_BLOCKS; i++) { // Find the block that contains the record
+        if (!disk[i].chainee.free) { // Check if the block is in use (not free)
+            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse the records in the block
+                if (disk[i].chainee.enregistrement[j].ID == recordID) { // If the record matches the given ID
+                    disk[i].chainee.enregistrement[j].Supprime = true; // Mark the record as logically deleted
+                    printf("Record %d in file %d marked as logically deleted.\n", recordID, fileID);
+                    return; // Return after marking the record as deleted
                 }
-            }
-            for (int j = writeIndex; j < BLOCK_SIZE; j++) {// Clear remaining records in the block
-                disk[i].contigue.enregistrement[j].ID = -1;
-                disk[i].contigue.enregistrement[j].Supprime = false;
-                memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
             }
         }
     }
 
-    printf("File %d defragmented.\n", fileID);
+    // If the record is not found in any block
+    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
 
-//12
-void deleteFile(int fileID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {// Check if the file ID is valid
+// 10. Physical Deletion of a Record
+void deleteRecordPhysical(int fileID, int recordID) {
+    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
     }
-    for (int i = 0; i < MAX_BLOCKS; i++) {   // Iterate through the disk to free all blocks associated with the file
-        if (!disk[i].contigue.free) { // Check if the block is in use
-            for (int j = 0; j < BLOCK_SIZE; j++) {  // Clear all records in the block
-                disk[i].contigue.enregistrement[j].ID = -1;
-                disk[i].contigue.enregistrement[j].Supprime = false;
-                memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data));
+
+    for (int i = 0; i < MAX_BLOCKS; i++) { // Find the block that contains the record
+        if (!disk[i].chainee.free) { // Check if the block is in use (not free)
+            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse the records in the block
+                if (disk[i].chainee.enregistrement[j].ID == recordID) { // If the record matches the given ID
+                    // Physically delete the record by resetting its fields
+                    disk[i].chainee.enregistrement[j].ID = -1; // Reset record ID to indicate it's removed
+                    disk[i].chainee.enregistrement[j].Supprime = false; // Reset "deleted" flag
+                    memset(disk[i].chainee.enregistrement[j].Data, 0, sizeof(disk[i].chainee.enregistrement[j].Data)); // Clear data
+                    printf("Record %d in file %d physically deleted.\n", recordID, fileID);
+                    
+                    // Optionally, update the next pointer or check for block compaction if needed
+                    // For now, we just return since it's a simple deletion
+                    return;
+                }
             }
-            disk[i].contigue.free = true; // Mark the block as free
         }
     }
 
-    printf("File %d deleted.\n", fileID);
+    // If the record is not found in any block
+    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+}
+// Function to perform logical deletion (marking a record as deleted)
+void SuppressionLogique(fichier *F, int recordId) {
+    // Find the record position using the search function
+    int recordPosition = rechercheEnregistrement(F, recordId);
+    
+    if (recordPosition == -1) {
+        printf("Enregistrement introuvable.\n");
+        return;
+    }
+    
+    // Mark the record as deleted (for example, setting a deletion flag or updating status)
+    Bloc Buffer;
+    LireBloc(F, recordPosition, &Buffer);
+    Buffer.deleted = true;  // Assuming the record has a 'deleted' flag
+    EcrireBloc(F, recordPosition, Buffer);
+    
+    printf("Suppression logique effectu√©e pour l'enregistrement %d.\n", recordId);
+    
+    // Perform defragmentation after logical deletion
+    Defragmentation(F);
 }
 
+// Function to perform physical deletion (removing the record from the disk)
+void SuppressionPhysique(fichier *F, int recordId) {
+    // Find the record position using the search function
+    int recordPosition = rechercheEnregistrement(F, recordId);
+    
+    if (recordPosition == -1) {
+        printf("Enregistrement introuvable.\n");
+        return;
+    }
+    
+    // Physically remove the record by clearing the block
+    Bloc Buffer;
+    LireBloc(F, recordPosition, &Buffer);
+    memset(&Buffer, 0, sizeof(Bloc));  // Clear the block content
+    
+    // Update the block to indicate it's free (or deleted)
+    EcrireBloc(F, recordPosition, Buffer);
+    
+    printf("Suppression physique effectu√©e pour l'enregistrement %d.\n", recordId);
+    
+    // Update metadata: reduce the number of records
+    int nbEnregistrements = lireEntete(F, 3);  // Read the number of records from metadata
+    MajEntetenum(F, 3, nbEnregistrements - 1);  // Decrease the number of records
+    
+    // Perform defragmentation to compact the storage after physical deletion
+    Defragmentation(F);
+}
 
+// Function to search for a record by its ID (this should be implemented based on your file structure)
+int rechercheEnregistrement(fichier *F, int recordId) {
+    // Iterate over the blocks to find the record with the given ID
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        Bloc Buffer;
+        LireBloc(F, i, &Buffer);
+        
+        if (Buffer.recordId == recordId && !Buffer.deleted) {
+            return i;  // Return the position of the record
+        }
+    }
+    return -1;  // Record not found
+}
+
+// Function to perform defragmentation: update metadata, table index, and compact blocks
+void Defragmentation(fichier *F) {
+    printf("D√©fragmentation en cours...\n");
+    
+    int nbBlocs = lireEntete(F, 2);  // Read the number of blocks from metadata
+    int nbEnregistrements = lireEntete(F, 3);  // Read the number of records from metadata
+    int freeBlockIndex = AllouerBloc();  // Get the next free block index
+    
+    if (freeBlockIndex == -1) {
+        printf("Pas de blocs libres disponibles pour la d√©fragmentation.\n");
+        return;
+    }
+    
+    // Iterate through blocks to compact data
+    for (int i = 0; i < nbBlocs; i++) {
+        Bloc Buffer;
+        LireBloc(F, i, &Buffer);
+        
+        if (Buffer.deleted || Buffer.empty) {
+            // If the block is deleted or empty, move the next record to this free block
+            // If there's a record to move, update the block and metadata
+            if (freeBlockIndex != i) {
+                LireBloc(F, freeBlockIndex, &Buffer);
+                EcrireBloc(F, i, Buffer);  // Move the record to the free block
+                freeBlockIndex = AllouerBloc();  // Get the next free block
+            }
+        }
+    }
+    
+    // Update metadata after defragmentation (number of blocks, records, etc.)
+    MajEntetenum(F, 2, nbBlocs);  // Update number of blocks after defragmentation
+    MajEntetenum(F, 3, nbEnregistrements);  // Update number of records
+    printf("D√©fragmentation termin√©e.\n");
+}
+// Delete a file with chained allocation
+void deleteFile(int fileID, fichier *F) {
+    if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Validate file ID
+        printf("Error: Invalid file ID %d.\n", fileID);
+        return;
+    }
+
+    // Find the first block of the file using chained allocation
+    int currentBlockID = -1;
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (!disk[i].chainee.free && disk[i].chainee.fileID == fileID) {
+            currentBlockID = i;  // Found the first block
+            break;
+        }
+    }
+
+    if (currentBlockID == -1) {  // If no block is found
+        printf("Error: File with ID %d not found.\n", fileID);
+        return;
+    }
+
+    int nbBlocsLibres = 0;  // Counter for free blocks
+
+    // Traverse and free all blocks of the file using the linked list
+    while (currentBlockID != -1) {
+        int nextBlockID = disk[currentBlockID].chainee.nextBlock;  // Store next block ID
+        
+        // Clear current block
+        disk[currentBlockID].chainee.free = true;
+        disk[currentBlockID].chainee.fileID = -1;
+        disk[currentBlockID].chainee.nextBlock = -1;
+        
+        for (int j = 0; j < BLOCK_SIZE; j++) {  // Clear records in the block
+            disk[currentBlockID].chainee.enregistrement[j].ID = -1;
+            disk[currentBlockID].chainee.enregistrement[j].Supprime = false;
+            memset(disk[currentBlockID].chainee.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].chainee.enregistrement[j].Data));
+        }
+
+        nbBlocsLibres++;  // Increase count of freed blocks
+        currentBlockID = nextBlockID;  // Move to the next block
+    }
+
+    // Update metadata
+    MajEntetenum(F, 2, lireEntete(*F, 2) - nbBlocsLibres);  // Update the number of blocks
+    MajEntetenum(F, 3, 0);  // Reset number of records to 0
+    MajEntetenum(F, 4, -1);  // Reset the first block address
+
+    // Remove file from the index table
+    removeFromIndexTable(fileID);  
+
+    printf("File %d deleted successfully.\n", fileID);
+}
