@@ -101,14 +101,6 @@ for(int j=0;j<BLOCK_SIZE;j++){
    
 
 
-        void creeFichierIndex (Enregistrement *f, FILE *fm, Index tableIndex []){
- 
-            rewind(fi);
-            Index buffer[7];
-              int nbrEntrees = lireEntete(fm,2);
-
-
-
 
 
 
