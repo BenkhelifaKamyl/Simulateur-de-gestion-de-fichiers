@@ -9,7 +9,7 @@
 
 
 
-void creationTableIndexDense(FILE *disque, FILE *f , Index densetableIndex []){
+void creationTableIndexDense(FILE *disk, FILE *f , Index densetableIndex []){
    rewind(f);
    Bloc buffer;
    int pos=0;
