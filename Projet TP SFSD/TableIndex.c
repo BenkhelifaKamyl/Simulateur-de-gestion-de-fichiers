@@ -48,6 +48,24 @@ for(int j=0;j<BLOCK_SIZE;j++){
     }
   }
   printf("\n la table d'index à été crée avec succes.");
-
 }
+
+
+ void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
+ 
+        rewind(f);
+         Bloc buffer;
+             for(int i=0;i<MAX_BLOCKS;i++){
+                   if(checkblock(i)){
+                fread(&buffer,sizeof(Bloc),1,disk);
+                   
+                    tableIndex[i]=buffer.enregistrement[0].ID;
+                    tableIndex[i].numbloc=buffer.adresse;
+                
+             }
+             }
+ }
+
+
+
     
