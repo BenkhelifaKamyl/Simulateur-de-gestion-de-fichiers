@@ -214,3 +214,19 @@ int AllouerBloc(){
         return i;
     return -1;
 }
+void chargerMetadonnees(fichier F){
+    metaIndex = fopen("MetaIndex.bin","ab+");
+    if(MetaIndex==NULL){
+        printf("\nImpossible d'ouvrir le fichier.");
+        return;
+    }
+    if(F.MDfile==NULL){
+        printf("\nLe fichier metaDonnees n'est pas ouvert.");
+        fclose(MetaIndex);
+        return;
+    }
+    MetaDonnee buffer;
+    fread(&buffer, sizeof(MetaDonnee),1,F.MDfile);
+    fwrite(&buffer, sizeof(MetaDonnee),1,MetaIndex);
+    fclose(MetaIndex);
+}

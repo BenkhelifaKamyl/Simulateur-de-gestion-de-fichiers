@@ -7,8 +7,6 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-
-
 void creationTableIndexDense(FILE *disk, FILE *f , Index densetableIndex []){
    rewind(f);
    Bloc buffer;
@@ -20,7 +18,7 @@ void creationTableIndexDense(FILE *disk, FILE *f , Index densetableIndex []){
     if(checkBlock(i) == true ){
 fread(&buffer, sizeof(Bloc),1,disk);
 for(int j=0;j<BLOCK_SIZE;j++){
-         
+
          X.ID=buffer.enregistrement[j].ID;
             X.numbloc= pos*FacteurBlocage +j;
             m=0;
@@ -38,7 +36,7 @@ for(int j=0;j<BLOCK_SIZE;j++){
 
                     densetableIndex[n+1].numbloc=densetableIndex[n].numbloc;
                     densetableIndex[n+1].ID=densetableIndex[n].ID;
-                
+
                 }
                 densetableIndex[m-1].ID=X.ID;
                 densetableIndex[m-1].numbloc=X.numbloc;
@@ -47,21 +45,21 @@ for(int j=0;j<BLOCK_SIZE;j++){
             pos++;
     }
   }
-  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
+  printf("\n la table d'index à été crée avec succes.");
 }
 
 
  void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
- 
+
         rewind(f);
          Bloc buffer;
              for(int i=0;i<MAX_BLOCKS;i++){
                    if(checkblock(i)){
                 fread(&buffer,sizeof(Bloc),1,disk);
-                   
+
                     tableIndex[i]=buffer.enregistrement[0].ID;
                     tableIndex[i].numbloc=buffer.adresse;
-                
+
              }
              }
  }
@@ -88,6 +86,3 @@ for(int j=0;j<BLOCK_SIZE;j++){
     }
     fclose(findex);
  }
-
-
-    

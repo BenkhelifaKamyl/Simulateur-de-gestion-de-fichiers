@@ -17,6 +17,8 @@ typedef struct{
     FILE *TableIndex;
 } fichier;
 
+FILE *MetaIndex;
+
 MetaDonnee creationFichier(char filename[30]);
 void lireNomFichier(fichier F, char nomFichier[30]); //Afin de lire le nom du fichier
 int lireEntete (fichier F, int nc);  // 2 pour le nombre de blocs, 3 pour le nombre d'enregistrements et 4 pour la premiere adresse
@@ -32,4 +34,5 @@ void fermerFichier(fichier F);
 //void LireBloc(fichier *F, int i, Bloc *Buffer);
 //void EcrireBloc(fichier *F, int i, Bloc Buffer);
 int AllouerBloc();
+void chargerMetadonnees(fichier F);
 #endif // METADONNEES_H_INCLUDED
