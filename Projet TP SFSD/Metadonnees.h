@@ -35,4 +35,5 @@ void fermerFichier(fichier F);
 //void EcrireBloc(fichier *F, int i, Bloc Buffer);
 int AllouerBloc();
 void chargerMetadonnees(fichier F);
+void chargerFichierMetadonnees(int premiereAdresse, fichier *F);
 #endif // METADONNEES_H_INCLUDED
