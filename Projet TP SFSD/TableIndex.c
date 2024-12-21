@@ -67,5 +67,27 @@ for(int j=0;j<BLOCK_SIZE;j++){
  }
 
 
+ void sauvegardeTableIndex(FILE *disk, FILE *fmeta, FILE *findex, Index tableindex[]){
+  findex=fopen("TableIndex.bin","wb+");
+  int nbentrees = lireEntete(fmeta,2);
+    if(findex == NULL){
+        printf("Impossible d'ouvrir le fichier");
+        return -1;
+    }
+    Index buffer [FacteurBlocage];
+    int j,k=0;
+    for(int i=0;i<nbentrees;i++){
+        j=0;
+        while(k<nbentrees && j<BLOCK_SIZE){
+            buffer[j].ID = tableindex[k].ID;
+            buffer[j].numbloc=tableindex[k].numbloc;
+            j++; k++;
+        }
+        fwrite(&buffer,sizeof(Index),1,findex);
+
+    }
+    fclose(findex);
+ }
+
 
     
