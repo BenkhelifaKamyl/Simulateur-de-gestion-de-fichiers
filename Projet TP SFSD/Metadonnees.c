@@ -215,18 +215,35 @@ int AllouerBloc(){
     return -1;
 }
 void chargerMetadonnees(fichier F){
-    metaIndex = fopen("MetaIndex.bin","ab+");
-    if(MetaIndex==NULL){
+    Meta = fopen("Meta.bin","ab+");
+    if(Meta==NULL){
         printf("\nImpossible d'ouvrir le fichier.");
         return;
     }
     if(F.MDfile==NULL){
         printf("\nLe fichier metaDonnees n'est pas ouvert.");
-        fclose(MetaIndex);
+        fclose(Meta);
         return;
     }
     MetaDonnee buffer;
     fread(&buffer, sizeof(MetaDonnee),1,F.MDfile);
-    fwrite(&buffer, sizeof(MetaDonnee),1,MetaIndex);
-    fclose(MetaIndex);
+    fwrite(&buffer, sizeof(MetaDonnee),1,Meta);
+    fclose(Meta);
+}
+void chargerFichierMetadonnees(int premiereAdresse, fichier *F){
+    Meta = fopen("Meta.bin","rb+");
+    MetaDonnee buffer;
+    rewind(F->MDfile);
+    bool check=false;
+    while(fread(&buffer, sizeof(MetaDonnee),1,MetaIndex)==1){
+        if(buffer.premiereAdresse==premiereAdresse){
+            fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
+            check=true;
+            break;
+        }
+    }
+    if(check==false){
+        printf("\nCe fichier n'existe pas.");
+    }
+    fclose(Meta);
 }

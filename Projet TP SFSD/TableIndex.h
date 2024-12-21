@@ -13,7 +13,7 @@ typedef struct{
 } Index; //Verifier si cette structure est correcte pour les 2 cas dense et non dense, faire si necessaire une autre structure
 
 Index TableIndex[MAX_BLOCKS];
-
+FILE *tablesIndex; //Fichier contenant tous les fichiers d'index
 //Les parametres des fonctions n'ont pas encore été attribuées
 
 //Mise a jour de l'etat des blocs apres chaque mise a jour

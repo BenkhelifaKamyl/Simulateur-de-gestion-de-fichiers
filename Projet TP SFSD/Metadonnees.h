@@ -17,7 +17,7 @@ typedef struct{
     FILE *TableIndex;
 } fichier;
 
-FILE *MetaIndex;
+FILE *Meta; //Contient les fichiers metadonnees
 
 MetaDonnee creationFichier(char filename[30]);
 void lireNomFichier(fichier F, char nomFichier[30]); //Afin de lire le nom du fichier
