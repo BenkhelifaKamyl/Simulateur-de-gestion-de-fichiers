@@ -18,7 +18,7 @@ void creationTableIndexDense(FILE *disk, FILE *f , Index densetableIndex []){
   for(int i=0;i<MAX_BLOCKS;i++){
 
     if(checkBlock(i) == true ){
-fread(&buffer, sizeof(Bloc),1,disque);
+fread(&buffer, sizeof(Bloc),1,disk);
 for(int j=0;j<BLOCK_SIZE;j++){
          
          X.ID=buffer.enregistrement[j].ID;
