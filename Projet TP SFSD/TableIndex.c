@@ -12,7 +12,7 @@ void creationTableIndexDense(Index densetableIndex []){
     MetaDonnee MD;
     int m,k=0;
     Index X;
-    fichier F;
+    FILE F;
     for(int i=0;i<MAX_BLOCKS;i++){
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie d'enregistrement
@@ -35,7 +35,7 @@ void creationTableIndexDense(Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index à été crée avec succes.");
+  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
 }
 }
  /*void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
