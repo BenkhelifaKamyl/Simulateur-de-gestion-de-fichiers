@@ -877,7 +877,7 @@ void deleteRecordPhysicalContiguous(int fileID, int recordID) {
                     // Physically delete the record by resetting its fields
                     disk[i].contigue.enregistrement[j].ID = -1; // Reset record ID to indicate it's removed
                     disk[i].contigue.enregistrement[j].Supprime = true; // Set "deleted" flag
-                    memset(disk[i].contigue.enregistrement[j].data, 0, sizeof(disk[i].contigue.enregistrement[j].data)); // Clear data
+                    memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data)); // Clear data
                     printf("Record %d in file %d physically deleted.\n", recordID, fileID);
                     return; // Record found and deleted, exit function
                 }
@@ -949,7 +949,7 @@ void DefragmentationContigue(fichier *F) {
         Bloc Buffer;
         LireBloc(F, i, &Buffer);
 
-        if (Buffer.contigu.free) {  // Check if the block is free or marked as deleted
+        if (Buffer.contigue.free) {  // Check if the block is free or marked as deleted
             // If the block is deleted or empty, move the next record to this free block
             if (freeBlockIndex != i) {
                 LireBloc(F, freeBlockIndex, &Buffer);

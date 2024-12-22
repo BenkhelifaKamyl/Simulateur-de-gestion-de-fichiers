@@ -9,17 +9,23 @@
 
 void creationTableIndexDense(Index densetableIndex []){
     Bloc buffer;
-    int pos=0;
+    MetaDonnee MD;
     int m,k=0;
     Index X;
+    fichier F;
     for(int i=0;i<MAX_BLOCKS;i++){
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie d'enregistrement
+            rechercheFichierMeta(i,&F);
+            fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
             for(int j=0;j<BLOCK_SIZE;j++){
-                X.ID=buffer.enregistrement[j].ID;
-                X.numbloc= i; //Position du bloc pas de l'enregistrement
+                if(MD.globalOrg==Chainee)
+                    X.id=buffer.chainee.enregistrement[j].ID;
+                else
+                    X.id=buffer.contigue.enregistrement[j].ID;
+                X.numBloc= i; //Position du bloc pas de l'enregistrement
                 m=0;
-                while(m<k && X.ID > densetableIndex[m].ID){ //Recherche de la position dans laquelle inserer
+                while(m<k && X.id > densetableIndex[m].id){ //Recherche de la position dans laquelle inserer
                     m++;
                 }
                 for(int n=k; n>m; n++){ //Decalage
@@ -31,8 +37,8 @@ void creationTableIndexDense(Index densetableIndex []){
   }
   printf("\n la table d'index à été crée avec succes.");
 }
-
- void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
+}
+ /*void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
     rewind(f);
     Bloc buffer;
     for(int i=0;i<MAX_BLOCKS;i++){
@@ -43,10 +49,10 @@ void creationTableIndexDense(Index densetableIndex []){
         }
     }
 }
-
- void sauvegardeTableIndex(FILE *disk, FILE *fmeta, FILE *findex, Index tableindex[]){
+*/
+ /*void sauvegardeTableIndex(FILE *disk, FILE *fmeta, FILE *findex, Index tableindex[]){
     findex=fopen("TableIndex.bin","wb+");
-    int nbentrees = lireEntete(fmeta,2);
+    int nbentrees = lireEntete(*fmeta,2);
     if(findex == NULL){
         printf("Impossible d'ouvrir le fichier");
         return -1;
@@ -64,3 +70,4 @@ void creationTableIndexDense(Index densetableIndex []){
     }
     fclose(findex);
  }
+*/
