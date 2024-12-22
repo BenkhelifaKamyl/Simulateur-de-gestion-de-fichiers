@@ -38,25 +38,33 @@ void creationTableIndexDense(Index densetableIndex []){
   printf("\n la table d'index à été crée avec succes.");
 }
 }
- /*void creeTableIndexNonDense (FILE *disk, FILE *f, Index tableIndex []){
-    rewind(f);
-    Bloc buffer;
-    for(int i=0;i<MAX_BLOCKS;i++){
-        if(checkblock(i)){
-            fread(&buffer,sizeof(Bloc),1,disk);
-            tableIndex[i]=buffer.enregistrement[0].ID;
-            tableIndex[i].numbloc=buffer.adresse;
-        }
-    }
-}
+void creeTableIndexNonDense ( Index tableIndex []){
+        MetaDonnee MD;
+        fichier f;
+         Bloc buffer;
+          
+  for(int i=0;i<MAX_BLOCKS;i++){
+         if(checkblock(i)){
+             memcpy(&buffer,disk[i],sizeof(Bloc)); //Copie de premier enregistrement
+             rechercheFichierMeta(i,&f);  //vérifier ci le fichier existe dans le disk 
+              rewind(f);
+                fread(&MD,sizeof(MetaDonnee),1,f.MDfile);
+                   if(MD.globalOrg == Chainee){
+
+                    tableIndex[i]=buffer.chainee.enregistrement[0].ID;
+                    }
+                    else {
+                       
+                    tableIndex[i]=buffer.contigue.enregistrement[0].ID;
+                    } 
+                 tableIndex[i].numbloc=i;
+             }
+             }
+    printf("\n la table d'index non dense à été crée avec succes.");
+ }
 */
- /*void sauvegardeTableIndex(FILE *disk, FILE *fmeta, FILE *findex, Index tableindex[]){
-    findex=fopen("TableIndex.bin","wb+");
-    int nbentrees = lireEntete(*fmeta,2);
-    if(findex == NULL){
-        printf("Impossible d'ouvrir le fichier");
-        return -1;
-    }
+ void sauvegardeTableIndex( Index tableindex[]){
+     
     Index buffer [FacteurBlocage];
     int j,k=0;
     for(int i=0;i<nbentrees;i++){
@@ -70,4 +78,4 @@ void creationTableIndexDense(Index densetableIndex []){
     }
     fclose(findex);
  }
-*/
+
