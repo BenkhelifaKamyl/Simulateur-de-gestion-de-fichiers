@@ -12,7 +12,7 @@ void creationTableIndexDense(Index densetableIndex []){
     MetaDonnee MD;
     int m,k=0;
     Index X;
-    FILE F;
+    fichier F;
     for(int i=0;i<MAX_BLOCKS;i++){
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie d'enregistrement
