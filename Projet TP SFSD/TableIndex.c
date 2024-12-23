@@ -13,8 +13,8 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
     int m,k=0;
     Index X;
     int nbBlocs = lireEntete(F,2);
-    int premiereAdresse = lireEntete(F,3);
-    int nbEnregistrements = lireEntete(F,4);
+    int premiereAdresse = lireEntete(F,4);
+    int nbEnregistrements = lireEntete(F,3);
     for(int i=premiereAdresse; i<=premiereAdresse+nbBlocs; i++){
         rewind(F->MDfile);
         if(checkBlock(i) == true ){
@@ -37,7 +37,7 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index à été crée avec succes.");
+  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
 }
 }
 void creeTableIndexNonDense (fichier F, Index tableIndex []){
@@ -47,8 +47,8 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
     Index X;
     //Lecture des metadonnees
     int nbBlocs = lireEntete(F,2);
-    int premiereAdresse = lireEntete(F,3);
-    int nbEnregistrements = lireEntete(F,4);
+    int premiereAdresse = lireEntete(F,4);
+    int nbEnregistrements = lireEntete(F,3);
 
     for(int i=premiereAdresse;i<=premiereAdresse+nbBlocs;i++){
         if(checkblock(i)){ //Verifie si le bloc est valide
@@ -64,12 +64,12 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense à été crée avec succes.");
+    printf("\n la table d'index non dense Ã  Ã©tÃ© crÃ©e avec succes.");
  }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     //Lecture des metadonnees
     int nbBlocs = lireEntete(*F,2);
-    int nbEnregistrements = lireEntete(*F,4);
+    int nbEnregistrements = lireEntete(*F,3);
     char nomFichier[30], nomIndex[36] = "Index";
     lireNomFichier(*F, nomFichier);
     strcat(nomIndex,nomFichier);
