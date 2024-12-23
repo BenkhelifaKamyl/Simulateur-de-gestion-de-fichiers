@@ -14,7 +14,7 @@ typedef struct{
 
 
 FILE *tablesIndex; //Fichier contenant tous les fichiers d'index
-//Les parametres des fonctions n'ont pas encore Ã©tÃ© attribuÃ©es
+//Les parametres des fonctions n'ont pas encore été attribuées
 
 //Mise a jour de l'etat des blocs apres chaque mise a jour
 void TableAllocation();
@@ -29,7 +29,7 @@ void chargementFichierIndexDense();
 void chargementFichierIndexNonDense();
 void rechercheEnregistrementDense();
 void rechercheEnregistrementNonDense();
-//Cas de mise Ã  jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
+//Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
 void MajTableIndexDense();
 void MajTableIndexNonDense();
 void clearIndexTable(fichier *F); // Update the index table: clear the entries, as all blocks are free

@@ -1,7 +1,7 @@
 #ifndef DISK_H_INCLUDED
 #define DISK_H_INCLUDED
 #define MAX_FILES 10        // Nombre maximum de fichiers gérés
-#define BLOCK_SIZE 128      // Taille de chaque bloc en octets
+#define BLOCK_SIZE 5      // Taille de chaque bloc
 #define MAX_BLOCKS 100 //Nombre maximal de blocs dans le disque
 typedef struct{
     int ID;
@@ -47,6 +47,7 @@ void SuppressionPhysique(fichier *F, int recordId);
 int rechercheEnregistrement(fichier *F, int recordId);
 void Defragmentation(fichier *F);
 void deleteFile(int fileID, fichier *F);
-
+void LireBloc(fichier *F, int i, Bloc *Buffer);
+void EcrireBloc(fichier *F, int i, Bloc Buffer);
 
 #endif // DISK_H_INCLUDED

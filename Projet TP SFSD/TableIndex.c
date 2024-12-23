@@ -37,7 +37,7 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
+  printf("\n la table d'index à été crée avec succes.");
 }
 }
 void creeTableIndexNonDense (fichier F, Index tableIndex []){
@@ -64,7 +64,7 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense Ã  Ã©tÃ© crÃ©e avec succes.");
+    printf("\n la table d'index non dense à été crée avec succes.");
  }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     //Lecture des metadonnees
@@ -98,4 +98,4 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     fclose(tablesIndex);
     fclose(F.TableIndex);
 }
- }
+

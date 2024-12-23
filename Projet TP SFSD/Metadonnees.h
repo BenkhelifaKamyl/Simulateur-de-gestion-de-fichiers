@@ -13,7 +13,6 @@ typedef struct{
 } MetaDonnee;
 typedef struct{
     FILE *MDfile;
-    FILE *file;
     FILE *TableIndex;
 } fichier;
 
@@ -32,8 +31,6 @@ void MajeEntetetri(fichier *F, int nc); //1 pour triee et 2 pour non triee
 void AfficherEntete(); //Affiche les fichiers de metadonnees
 void OuvrirFichier(fichier *F, char mode);
 void fermerFichier(fichier F);
-//void LireBloc(fichier *F, int i, Bloc *Buffer);
-//void EcrireBloc(fichier *F, int i, Bloc Buffer);
 int AllouerBloc();
 void chargerMetadonnees(fichier F);
 void chargerFichierMetadonnees(int premiereAdresse, fichier *F);

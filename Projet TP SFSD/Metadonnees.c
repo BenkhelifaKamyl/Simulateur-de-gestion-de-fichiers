@@ -193,23 +193,6 @@ void OuvrirFichier(fichier *F, char mode){ //Ouvre le fichier, "w" pour ecrire e
         printf("\nCe mode d'ouverture n'existe pas.");
     }
 }
-void LireBloc(fichier *F, int i, Bloc *Buffer){
-    if(i<0 || i>=MAX_BLOCKS)
-        printf("Indice de bloc invalide\n");
-    else{
-    fseek(F->file,sizeof(MetaDonnee)+ (i)*sizeof(Bloc), SEEK_SET); //Lire depuis le bloc i
-    fread(Buffer, sizeof(Bloc),1,F->file);
-    }
-}
-void EcrireBloc(fichier *F, int i, Bloc Buffer){
-    if(i<0 || i>=MAX_BLOCKS)
-        printf("Indice de bloc invalide\n");
-    else{
-    fseek(F->file,sizeof(MetaDonnee)+ (i-1)*sizeof(Bloc), SEEK_SET); //Ecrire dans le bloc i
-    fwrite(&Buffer, sizeof(Bloc),1,F->file);
-    memcpy(&disk[i], &Buffer, sizeof(Bloc));
-}
-}
 void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
     fclose(F.TableIndex);
     fclose(F.MDfile);

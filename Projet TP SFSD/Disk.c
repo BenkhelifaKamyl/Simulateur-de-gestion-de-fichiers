@@ -323,7 +323,7 @@ void fillFileContigue(int fileID, bool isSorted, fichier *F) {
     printf("File %d filled in contiguous mode. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
 }
 
-/*void ChargerFichierchainee(int fileID, fichier *F) {
+void ChargerFichierchainee(int fileID, fichier *F) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
@@ -793,7 +793,7 @@ void deleteRecordPhysicalchaine(int fileID, int recordID) {
 
     // If the record is not found in any block
     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
-}*/
+}
 
 
 
@@ -1074,3 +1074,17 @@ void deleteFileContigue(int fileID, fichier *F) {
 }
 
 */
+void LireBloc(fichier *F, int i, Bloc *Buffer){
+    if(i<0 || i>=MAX_BLOCKS){
+        printf("Indice de bloc invalide\n");
+    }
+    else
+        memcpy(Buffer,&disk[i],sizeof(Bloc));
+}
+void EcrireBloc(fichier *F, int i, Bloc Buffer){
+    if(i<0 || i>=MAX_BLOCKS)
+        printf("Indice de bloc invalide\n");
+    else{
+        memcpy(&disk[i],&Buffer,sizeof(Bloc));
+    }
+}
