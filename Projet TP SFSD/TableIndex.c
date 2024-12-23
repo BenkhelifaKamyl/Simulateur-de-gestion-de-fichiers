@@ -99,3 +99,49 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     fclose(F.TableIndex);
 }
 
+void chargementFichierIndexDense(FILE  tableIndex, Index tableIndexDense []){
+         fichier *g ; // pour lire les fichiers d'index 
+     int j;
+
+       for(int i=0;i<MAX_FILES;i++){
+        fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprés le fichier tablesindex
+        if(liretypeTri(g) == true){ // voir si le cas dense ou nondense
+            chargementFichierIndexNonDense(g,  tableIndexNonDense[]);   // le fichier est nondense donc il exécute l'autre procédure
+             }
+             else{
+             int nbrEngis = lireEntet(g,3);
+              Index buffer[nbrEngis];
+            fread(&buffer,sizeof(Index),1,g);
+             
+             for(j=0;j<nbrEngis;j++){
+                 tableIndexDense[j].ID=buffer[j].ID;
+                 tableIndexDense[j].numbloc=buffer[j].numbloc;
+
+                       }
+                }
+
+       } 
+}
+
+void chargementFichierIndexNonDense(FILE tableIndex, Index tableIndexNonDense[]){
+fichier *g; // pour lire les fichiers index 
+
+for(int i=0;i<MAX_FILES;i++){
+fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprés le fichier tablesindex
+    if(liretypeTri(g) == false){ // voir si le cas dense ou nondense
+        chargementFichierIndexDense(g, tableIndexDense[]); // le fichier est dense donc il exécute l'autre procédure
+    }
+    else{
+        int nbrBlocs = lireEntete(g,2);
+        Index buffer[nbrBlocs];
+        fread(&buffer,sizeof(Index),1,g);
+        for(int j=0;j<nbrBlocs;j++){
+            tableIndexNonDense[j].ID=buffer[j].ID;
+            tableIndexNonDense[j].numbloc=buffer[j].numbloc;
+        }
+    }
+}
+
+}
+
+
