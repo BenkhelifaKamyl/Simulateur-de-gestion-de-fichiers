@@ -102,6 +102,7 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
 void chargementFichierIndexDense(FILE  tableIndex, Index tableIndexDense []){
          fichier *g ; // pour lire les fichiers d'index 
      int j;
+rewind(tableIndex);
 
        for(int i=0;i<MAX_FILES;i++){
         fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprés le fichier tablesindex
@@ -125,7 +126,7 @@ void chargementFichierIndexDense(FILE  tableIndex, Index tableIndexDense []){
 
 void chargementFichierIndexNonDense(FILE tableIndex, Index tableIndexNonDense[]){
 fichier *g; // pour lire les fichiers index 
-
+rewind(tableIndex);
 for(int i=0;i<MAX_FILES;i++){
 fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprés le fichier tablesindex
     if(liretypeTri(g) == false){ // voir si le cas dense ou nondense
