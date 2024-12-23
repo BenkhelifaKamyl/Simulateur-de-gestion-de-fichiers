@@ -7,7 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-MetaDonnee creationFichier(){
+MetaDonnee creationFichier(){ //Saisie des informations du fichier
     int orgGlobale;
     int orgInterne;
     MetaDonnee MD;
@@ -35,23 +35,23 @@ MetaDonnee creationFichier(){
         MD.interneOrg = triee;
     else
         MD.interneOrg = nonTriee;
-    //MD.premiereAdresse = ?
+    MD.premiereAdresse = AllouerBloc();
     return MD;
 }
-void creationFichierMetadonnees(fichier *F){
+void creationFichierMetadonnees(fichier *F){ //Permet de creer le fichier et de le charger en "MS"
     MetaDonnee buffer;
-    buffer = creationFichier();
+    buffer = creationFichier(); //Recupere les infos du fichier a inserer
     F->MDfile = fopen(buffer.name, "wb+");
     fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
-    chargerMetadonnees(*F);
+    chargerMetadonnees(*F); //Le charger en "MS"
 }
-void lireNomFichier(fichier F, char nomFichier[30]){
+void lireNomFichier(fichier F, char nomFichier[30]){ //Lire le nom du fichier
     rewind(F.MDfile);
     MetaDonnee MD;
     fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
     strcpy(nomFichier, MD.name);
 }
-int lireEntete(fichier F, int nc){
+int lireEntete(fichier F, int nc){ // Retourne: 2:Nombre de blocs utilisés par le fichier, 3: Nb enregistrements, 4: Premiere Adresse en MS
     rewind(F.MDfile);
     MetaDonnee MD;
     fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
@@ -67,14 +67,13 @@ int lireEntete(fichier F, int nc){
         break;
     }
 }
-typeOrganisation lireEnteteGlobal(fichier F){
+typeOrganisation lireEnteteGlobal(fichier F){ //Retourne si le fichier suit une organisation chainee ou contigue
     rewind(F.MDfile);
     MetaDonnee MD;
     fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
     return MD.globalOrg;
 }
-
-bool liretypeTri(fichier F){
+bool liretypeTri(fichier F){ //Retourne vrai si le fchier est trie, sinon faux
     rewind(F.MDfile);
     MetaDonnee buffer;
     fread(&buffer, sizeof(MetaDonnee),1,F.MDfile);
@@ -85,7 +84,7 @@ bool liretypeTri(fichier F){
         return false;
     }
 }
-void MajEntetenom(fichier *F, char nom[30]){
+void MajEntetenom(fichier *F, char nom[30]){ //Met a jour le nom du fichier
     rewind(F->MDfile);
     MetaDonnee MD;
     fread(&MD, sizeof(MetaDonnee),1,F->MDfile);
@@ -95,7 +94,7 @@ void MajEntetenom(fichier *F, char nom[30]){
     fclose(F->MDfile);
     F->MDfile = fopen(MD.name, "rb+");
 }
-void MajEntetenum(fichier *F, int nc, int val){
+void MajEntetenum(fichier *F, int nc, int val){ //Met a jour les caracteristiques
      rewind(F->MDfile);
      MetaDonnee MD;
      switch(nc){
@@ -151,7 +150,7 @@ void MajeEntetetri(fichier *F, int nc){
         break;
     }
 }
-void AfficherEntete(){
+void AfficherEntete(){ //Affiche les informations de tous les fichiers de metadonnees
     rewind(Meta);
     MetaDonnee Buffer;
     int i=1;
@@ -172,22 +171,22 @@ void AfficherEntete(){
         i++;
     }
 }
-void OuvrirFichier(fichier *F, char mode){
+void OuvrirFichier(fichier *F, char mode){ //Ouvre le fichier, "w" pour ecrire et "r" pour lire
     MetaDonnee buffer;
-    if(mode=='w'){
+    if(mode=='w'){ //Mode ecriture
         printf("\nFichier ouvert en mode ecriture.");
-        creationFichierMetadonnees(F);
-        if(F->MDfile!=NULL){
+        creationFichierMetadonnees(F); //Cree et charge le fichier de metadonnees en "MS"
+        if(F->MDfile!=NULL){ //Remplis le fichier sur le disk selon les modes d'organisation
             if(lireEnteteGlobal(*F)==Chainee)
                 fillFileChainee(-1, liretypeTri(*F), F);
             else
                 fillFileContigue(-1, liretypeTri(*F),F);
         }
     }
-    else if (mode=='r'){
+    else if (mode=='r'){ //Mode lecture
         printf("\nFichier ouvert en mode lecture.");
         if(F->MDfile!=NULL){
-            fread(&buffer, sizeof(MetaDonnee),1,F->MDfile);
+            fread(&buffer, sizeof(MetaDonnee),1,F->MDfile); //Permet de lire un fichier
         }
     }
     else{
@@ -211,19 +210,19 @@ void EcrireBloc(fichier *F, int i, Bloc Buffer){
     memcpy(&disk[i], &Buffer, sizeof(Bloc));
 }
 }
-void fermerFichier(fichier F){
-    fclose(F.file);
+void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
+    fclose(F.TableIndex);
     fclose(F.MDfile);
 }
-int AllouerBloc(){
+int AllouerBloc(){ //Retourne le premier bloc libre
     int i=0;
-    while(disk[i].chainee.free==false)
+    while(i<MAX_BLOCKS &&disk[i].chainee.free==false)
         i++;
     if(i<MAX_BLOCKS)
         return i;
     return -1;
 }
-void chargerMetadonnees(fichier F){
+void chargerMetadonnees(fichier F){ //Charge le fichier de metadonnees dans la "MS"
     Meta = fopen("Meta.bin","ab+");
     rewind(F.MDfile);
     if(Meta==NULL){
@@ -240,7 +239,7 @@ void chargerMetadonnees(fichier F){
     fwrite(&buffer, sizeof(MetaDonnee),1,Meta);
     fclose(Meta);
 }
-void chargerFichierMetadonnees(int premiereAdresse, fichier *F){
+void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le fichier de metadonnees cherché selon la premiere adresse d'un fichier
     Meta = fopen("Meta.bin","rb+");
     MetaDonnee buffer;
     rewind(F->MDfile);
@@ -257,7 +256,7 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){
     }
     fclose(Meta);
 }
-void rechercheFichierMeta(int nBloc, fichier *F){
+void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metadonnees selon un numero de bloc
     Meta = fopen("Meta.bin","rb+");
     MetaDonnee buffer;
     bool trouve=false;

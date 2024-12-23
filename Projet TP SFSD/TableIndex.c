@@ -35,18 +35,18 @@ void creationTableIndexDense(Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
+  printf("\n la table d'index à été crée avec succes.");
 }
 }
 void creeTableIndexNonDense ( Index tableIndex []){
         MetaDonnee MD;
         fichier f;
          Bloc buffer;
-          
+
   for(int i=0;i<MAX_BLOCKS;i++){
          if(checkblock(i)){
              memcpy(&buffer,disk[i],sizeof(Bloc)); //Copie de premier enregistrement
-             rechercheFichierMeta(i,&f);  //vÃ©rifier ci le fichier existe dans le disk 
+             rechercheFichierMeta(i,&f);  //vérifier ci le fichier existe dans le disk
               rewind(f);
                 fread(&MD,sizeof(MetaDonnee),1,f.MDfile);
                    if(MD.globalOrg == Chainee){
@@ -54,17 +54,17 @@ void creeTableIndexNonDense ( Index tableIndex []){
                     tableIndex[i]=buffer.chainee.enregistrement[0].ID;
                     }
                     else {
-                       
+
                     tableIndex[i]=buffer.contigue.enregistrement[0].ID;
-                    } 
+                    }
                  tableIndex[i].numbloc=i;
              }
              }
-    printf("\n la table d'index non dense Ã  Ã©tÃ© crÃ©e avec succes.");
+    printf("\n la table d'index non dense à été crée avec succes.");
  }
 */
- void sauvegardeTableIndex( Index tableindex[]){
-     
+ void sauvegardeTableIndex(Index tableindex[]){
+
     Index buffer [FacteurBlocage];
     int j,k=0;
     for(int i=0;i<nbentrees;i++){
@@ -78,4 +78,3 @@ void creeTableIndexNonDense ( Index tableIndex []){
     }
     fclose(findex);
  }
-
