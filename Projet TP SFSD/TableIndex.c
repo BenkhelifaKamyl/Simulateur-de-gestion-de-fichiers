@@ -16,7 +16,7 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
     int premiereAdresse = lireEntete(F,4);
     int nbEnregistrements = lireEntete(F,3);
     for(int i=premiereAdresse; i<=premiereAdresse+nbBlocs; i++){
-        rewind(F->MDfile);
+        rewind(F.MDfile);
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
             fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
@@ -37,7 +37,7 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index Ã  Ã©tÃ© crÃ©e avec succes.");
+  printf("\n la table d'index à été crée avec succes.");
 }
 }
 void creeTableIndexNonDense (fichier F, Index tableIndex []){
@@ -52,7 +52,7 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
 
     for(int i=premiereAdresse;i<=premiereAdresse+nbBlocs;i++){
         if(checkblock(i)){ //Verifie si le bloc est valide
-            memcpy(&buffer,disk[i],sizeof(Bloc)); //Copie du bloc
+            memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
             rewind(F.MDfile);
             fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
             if(MD.globalOrg==Chainee)
@@ -64,7 +64,7 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense Ã  Ã©tÃ© crÃ©e avec succes.");
+    printf("\n la table d'index non dense à été crée avec succes.");
  }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     //Lecture des metadonnees
@@ -98,51 +98,4 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     fclose(tablesIndex);
     fclose(F.TableIndex);
 }
-
-void chargementFichierIndexDense(FILE  tableIndex, Index tableIndexDense []){
-         fichier *g ; // pour lire les fichiers d'index 
-     int j;
-rewind(tableIndex);
-
-       for(int i=0;i<MAX_FILES;i++){
-        fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprÃ©s le fichier tablesindex
-        if(liretypeTri(g) == true){ // voir si le cas dense ou nondense
-            chargementFichierIndexNonDense(g,  tableIndexNonDense[]);   // le fichier est nondense donc il exÃ©cute l'autre procÃ©dure
-             }
-             else{
-             int nbrEngis = lireEntet(g,3);
-              Index buffer[nbrEngis];
-            fread(&buffer,sizeof(Index),1,g);
-             
-             for(j=0;j<nbrEngis;j++){
-                 tableIndexDense[j].ID=buffer[j].ID;
-                 tableIndexDense[j].numbloc=buffer[j].numbloc;
-
-                       }
-                }
-
-       } 
-}
-
-void chargementFichierIndexNonDense(FILE tableIndex, Index tableIndexNonDense[]){
-fichier *g; // pour lire les fichiers index 
-rewind(tableIndex);
-for(int i=0;i<MAX_FILES;i++){
-fread(&g,sizeof(fichier),1,tableIndex); //lire un fichier  d'aprÃ©s le fichier tablesindex
-    if(liretypeTri(g) == false){ // voir si le cas dense ou nondense
-        chargementFichierIndexDense(g, tableIndexDense[]); // le fichier est dense donc il exÃ©cute l'autre procÃ©dure
-    }
-    else{
-        int nbrBlocs = lireEntete(g,2);
-        Index buffer[nbrBlocs];
-        fread(&buffer,sizeof(Index),1,g);
-        for(int j=0;j<nbrBlocs;j++){
-            tableIndexNonDense[j].ID=buffer[j].ID;
-            tableIndexNonDense[j].numbloc=buffer[j].numbloc;
-        }
-    }
-}
-
-}
-
 

@@ -25,10 +25,10 @@ void creationTableIndexNonDense(fichier F, Index tableIndex []);
 //Sauvegarder la table d'index en memoire secondaire
 void sauvegardeTableIndex(fichier *F, Index tableindex[]);
 //Mettre le fichier d'index dans une table d'index en Memoire centrale
-void chargementFichierIndexDense();
-void chargementFichierIndexNonDense();
-void rechercheEnregistrementDense();
-void rechercheEnregistrementNonDense();
+void chargementFichierIndexDense(fichier F, Index tableIndex[]);
+void chargementFichierIndexNonDense(fichier F, Index tableIndex[]);
+void rechercheEnregistrementDense(fichier F);
+void rechercheEnregistrementNonDense(fichier F);
 //Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
 void MajTableIndexDense();
 void MajTableIndexNonDense();

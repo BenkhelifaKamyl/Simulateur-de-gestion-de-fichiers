@@ -35,4 +35,5 @@ int AllouerBloc();
 void chargerMetadonnees(fichier F);
 void chargerFichierMetadonnees(int premiereAdresse, fichier *F);
 void rechercheFichierMeta(int nBloc, fichier *F);
+void rechercheNomFichier(fichier *F, char filename[30]);
 #endif // METADONNEES_H_INCLUDED

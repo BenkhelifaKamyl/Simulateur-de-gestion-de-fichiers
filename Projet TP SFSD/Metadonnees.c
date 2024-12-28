@@ -182,6 +182,8 @@ void OuvrirFichier(fichier *F, char mode){ //Ouvre le fichier, "w" pour ecrire e
             else
                 fillFileContigue(-1, liretypeTri(*F),F);
         }
+        //Chargement fichier index se fait soit dans le fillFile soit ici, en attente
+        fermerFichier(*F);
     }
     else if (mode=='r'){ //Mode lecture
         printf("\nFichier ouvert en mode lecture.");
@@ -249,6 +251,20 @@ void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metad
             trouve=true;
         }
         else if(nBloc>buffer.premiereAdresse && nBloc<=(buffer.premiereAdresse + buffer.nbBlocs)){
+            chargerFichierMetadonnees(buffer.premiereAdresse,F);
+            trouve=true;
+        }
+    }
+    if(trouve==false)
+        printf("\nLe fichier de metadonnees n'a pas ete trouve.");
+    fclose(Meta);
+}
+void rechercheNomFichier(fichier *F, char filename[30]){
+    Meta = fopen("Meta.bin","rb+");
+    MetaDonnee buffer;
+    bool trouve=false;
+    while(trouve==false && fread(&buffer, sizeof(MetaDonnee),1,Meta)==1){
+        if(strcmp(filename,buffer.name)==0){
             chargerFichierMetadonnees(buffer.premiereAdresse,F);
             trouve=true;
         }
