@@ -37,7 +37,7 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index ‡ ÈtÈ crÈe avec succes.");
+  printf("\n la table d'index √† √©t√© cr√©e avec succes.");
 }
 }
 void creeTableIndexNonDense (fichier F, Index tableIndex []){
@@ -64,7 +64,7 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
+    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
  }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     //Lecture des metadonnees
@@ -97,5 +97,46 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
     }
     fclose(tablesIndex);
     fclose(F.TableIndex);
+}
+
+void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
+    
+            if(liretypeTri(F) == true){
+            chargementFichierIndexNonDense(g,  tableIndexNonDense[]);   // le fichier est nondense donc il ex√©cute l'autre proc√©dure
+             }
+             else{
+             int nbBlocs = lireEntete(F.MDfile,2);
+             int nbrEngis = lireEntete(F.MDfile,3);
+              Index buffer[BLOCK_SIZE];
+              for(int i=0;i<=nbBlocs-1;i++){
+            fread(&buffer,sizeof(Index),1,F.TableIndex);
+             int j=0; int k=0;
+                  while(j<BLOCK_SIZE && k<nbEngis){
+                 tableIndexDense[k].ID=buffer[j].ID;
+                 tableIndexDense[k].numbloc=buffer[j].numbloc;
+                 j++;
+                 k++;
+
+                   }
+                }
+             }
+       } 
+
+void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
+
+
+      if(liretypeTri(F) == false){
+        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il ex√©cute l'autre proc√©dure
+    }
+    else{
+        int nbrBlocs = lireEntete(F.MDfile,2);
+        Index buffer[nbrBlocs];
+       
+        for(int j=0;j<nbrBlocs;j++){
+            fread(&buffer,sizeof(Index),1,F.TableIndex);
+            tableIndexNonDense[j].ID=buffer[0].ID;
+            tableIndexNonDense[j].numbloc=buffer[0].numbloc;
+        }
+    }
 }
 
