@@ -100,37 +100,37 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){
 }
 
 void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
+rewind(F);
     
             if(liretypeTri(F) == true){
-            chargementFichierIndexNonDense(g,  tableIndexNonDense[]);   // le fichier est nondense donc il exécute l'autre procédure
-             }
+            chargementFichierIndexNonDense(&F,  tableIndexNonDense[]);   // le fichier est nondense donc il exécute l'autre procédure
+            }
              else{
              int nbBlocs = lireEntete(F.MDfile,2);
              int nbrEngis = lireEntete(F.MDfile,3);
-              Index buffer[BLOCK_SIZE];
+              Index buffer;
               for(int i=0;i<=nbBlocs-1;i++){
             fread(&buffer,sizeof(Index),1,F.TableIndex);
-             int j=0; int k=0;
-                  while(j<BLOCK_SIZE && k<nbEngis){
-                 tableIndexDense[k].ID=buffer[j].ID;
-                 tableIndexDense[k].numbloc=buffer[j].numbloc;
-                 j++;
+                int k=0;
+                  while( k<nbEngis){
+                 tableIndexDense[k].ID=buffer.ID;
+                 tableIndexDense[k].numbloc=buffer.numbloc;
                  k++;
-
                    }
                 }
              }
-       } 
+}
+     
 
 void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
-
+rewind(F);
 
       if(liretypeTri(F) == false){
-        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il exécute l'autre procédure
+        chargementFichierIndexDense(&F, tableIndexDense[]); // le fichier est dense donc il exécute l'autre procédure
     }
     else{
         int nbrBlocs = lireEntete(F.MDfile,2);
-        Index buffer[nbrBlocs];
+        Index buffer;
        
         for(int j=0;j<nbrBlocs;j++){
             fread(&buffer,sizeof(Index),1,F.TableIndex);
