@@ -32,8 +32,8 @@ void AfficherEntete(); //Affiche les fichiers de metadonnees
 void OuvrirFichier(fichier *F, char mode);
 void fermerFichier(fichier F);
 int AllouerBloc();
-void chargerMetadonnees(fichier F);
-void chargerFichierMetadonnees(int premiereAdresse, fichier *F);
-void rechercheFichierMeta(int nBloc, fichier *F);
-void rechercheNomFichier(fichier *F, char filename[30]);
+void chargerMetadonnees(fichier F); //Charge le fichier de metadonnees en "MS"
+void chargerFichierMetadonnees(int premiereAdresse, fichier *F); //Charge le fichier de metadonnees selon la premiere adresse du fichier
+void rechercheFichierMeta(int nBloc, fichier *F); //Recupere le fichier de metadonnees selon un numero de bloc
+void rechercheNomFichier(fichier *F, char filename[30], int *i); //Recherche un fichier selon son nom
 #endif // METADONNEES_H_INCLUDED

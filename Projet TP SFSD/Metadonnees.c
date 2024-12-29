@@ -208,8 +208,13 @@ int AllouerBloc(){ //Retourne le premier bloc libre
     return -1;
 }
 void chargerMetadonnees(fichier F){ //Charge le fichier de metadonnees dans la "MS"
-    Meta = fopen("Meta.bin","ab+");
+    char filename[30];
+    fichier G;
+    int i;
+    lireNomFichier(F,filename);
+    rechercheNomFichier(&G,filename,&i); //Verifie si le fichier existe deja ou pas dans la "MS"
     rewind(F.MDfile);
+    Meta = fopen("Meta.bin","rb+");
     if(Meta==NULL){
         printf("\nImpossible d'ouvrir le fichier.");
         return;
@@ -221,6 +226,8 @@ void chargerMetadonnees(fichier F){ //Charge le fichier de metadonnees dans la "
     }
     MetaDonnee buffer;
     fread(&buffer, sizeof(MetaDonnee),1,F.MDfile);
+
+    fseek(Meta, i*sizeof(Meta),SEEK_SET);
     fwrite(&buffer, sizeof(MetaDonnee),1,Meta);
     fclose(Meta);
 }
@@ -238,6 +245,7 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le f
     }
     if(check==false){
         printf("\nCe fichier n'existe pas.");
+        F->MDfile=NULL;
     }
     fclose(Meta);
 }
@@ -259,17 +267,21 @@ void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metad
         printf("\nLe fichier de metadonnees n'a pas ete trouve.");
     fclose(Meta);
 }
-void rechercheNomFichier(fichier *F, char filename[30]){
+void rechercheNomFichier(fichier *F, char filename[30], int *i){
     Meta = fopen("Meta.bin","rb+");
     MetaDonnee buffer;
     bool trouve=false;
+    (*i)=0;
     while(trouve==false && fread(&buffer, sizeof(MetaDonnee),1,Meta)==1){
         if(strcmp(filename,buffer.name)==0){
             chargerFichierMetadonnees(buffer.premiereAdresse,F);
             trouve=true;
         }
+        (*i)++;
     }
-    if(trouve==false)
+    if(trouve==false){
         printf("\nLe fichier de metadonnees n'a pas ete trouve.");
+        F->MDfile=NULL;
+    }
     fclose(Meta);
 }
