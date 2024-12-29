@@ -205,13 +205,18 @@ void clearDiskContigue() {
 }
 
 //5Vérification d'un Bloc(chainee)
-bool checkBlock(int blockID) {
+bool checkBlock(int blockID) { // retourne vrai si il est rempli et faux si il est libre ou n'existe pas
     if (blockID >= 0 && blockID < MAX_BLOCKS) {
         return !disk[blockID].chainee.free;
     }
     return false;
 }
-
+bool checkBlockContigue(int blockID) {
+    if (blockID >= 0 && blockID < MAX_BLOCKS) {
+        return !disk[blockID].contigue.free;
+    }
+    return false;
+}
 // Fill a File (Sorted or Unsorted) Using a Buffer (chainee)
 void fillFileChainee(int fileID, bool isSorted, fichier *F) {
     const int BUFFER_SIZE = BLOCK_SIZE;

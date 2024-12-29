@@ -20,8 +20,10 @@ FILE *tablesIndex; //Fichier contenant tous les fichiers d'index
 void TableAllocation();
 
 //Creation de la table d'index
-void creationTableIndexDense(fichier F, Index densetableIndex []);
-void creationTableIndexNonDense(fichier F, Index tableIndex []);
+void creationTableIndexDenseContigue(fichier F, Index densetableIndex []);
+void creationTableIndexDenseChainee(fichier F, Index densetableIndex []);
+void creationTableIndexNonDenseContigue (fichier F, Index tableIndex [])
+void creationTableIndexNonDenseChainee(fichier F, Index tableIndex[]);
 //Sauvegarder la table d'index en memoire secondaire
 void sauvegardeTableIndex(fichier *F, Index tableindex[]);
 //Mettre le fichier d'index dans une table d'index en Memoire centrale

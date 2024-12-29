@@ -42,7 +42,8 @@ void clearDisk();
 void clearDiskchainee();
 void clearDiskContigue();
 //Verfication
-bool checkBlock(int blockID);
+bool checkBlock(int blockID); //Faux si libre ou n'existe pas, vrai si rempli
+bool checkBlockContigue(int blockId);
 //Remplissage
 void fillFileChainee(int fileID, bool isSorted, fichier *F);
 void fillFileContigue(int fileID, bool isSorted, fichier *F);

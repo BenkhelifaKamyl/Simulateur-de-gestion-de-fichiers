@@ -7,7 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-void creationTableIndexDense(fichier F, Index densetableIndex []){
+void creationTableIndexDenseContigue(fichier F, Index densetableIndex []){
     Bloc buffer;
     MetaDonnee MD;
     int m,k=0;
@@ -17,14 +17,11 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
     int nbEnregistrements = lireEntete(F,3);
     for(int i=premiereAdresse; i<=premiereAdresse+nbBlocs; i++){
         rewind(F.MDfile);
-        if(checkBlock(i) == true ){
+        if(checkBlockContigue(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
             fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
             for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
-                if(MD.globalOrg==Chainee)
-                    X.id=buffer.chainee.enregistrement[j].ID;
-                else
-                    X.id=buffer.contigue.enregistrement[j].ID;
+                X.id=buffer.contigue.enregistrement[j].ID;
                 X.numBloc= i; //Position du bloc pas de l'enregistrement
                 m=0;
                 while(m<k && X.id > densetableIndex[m].id){ //Recherche de la position dans laquelle inserer
@@ -40,7 +37,40 @@ void creationTableIndexDense(fichier F, Index densetableIndex []){
   printf("\n la table d'index à été crée avec succes.");
 }
 }
-void creeTableIndexNonDense (fichier F, Index tableIndex []){
+void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
+    Bloc buffer;
+    MetaDonnee MD;
+    int m,k=0;
+    Index X;
+    int nbBlocs = lireEntete(F,2);
+    int premiereAdresse = lireEntete(F,4);
+    int nbEnregistrements = lireEntete(F,3);
+    int i=premiereAdresse;
+
+    while(i!=-1){
+        rewind(F.MDfile);
+        if(checkBlock(i) == true ){
+            memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
+            fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
+            for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
+                X.id=buffer.chainee.enregistrement[j].ID;
+                X.numBloc= i; //Position du bloc pas de l'enregistrement
+                i=buffer.chainee.next;
+                m=0;
+                while(m<k && X.id > densetableIndex[m].id){ //Recherche de la position dans laquelle inserer
+                    m++;
+                }
+                for(int n=k; n>m; n++){ //Decalage
+                    densetableIndex[n]=densetableIndex[n-1];
+                }
+                memcpy(&densetableIndex[m],&X, sizeof(Index)); //Copie d'enregistrement
+                k++;
+            }
+        }
+    }
+    printf("\n la table d'index à été crée avec succes.");
+}
+void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     Bloc buffer;
     MetaDonnee MD;
     int k=0;
@@ -51,7 +81,7 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
     int nbEnregistrements = lireEntete(F,3);
 
     for(int i=premiereAdresse;i<=premiereAdresse+nbBlocs;i++){
-        if(checkblock(i)){ //Verifie si le bloc est valide
+        if(checkBlockContigue(i)){ //Verifie si le bloc est valide
             memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
             rewind(F.MDfile);
             fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
@@ -66,6 +96,31 @@ void creeTableIndexNonDense (fichier F, Index tableIndex []){
     }
     printf("\n la table d'index non dense à été crée avec succes.");
  }
+void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
+    Bloc buffer;
+    MetaDonnee MD;
+    int k=0;
+    Index X;
+    //Lecture des metadonnees
+    int nbBlocs = lireEntete(F,2);
+    int premiereAdresse = lireEntete(F,4);
+    int nbEnregistrements = lireEntete(F,3);
+    i = premiereAdresse;
+
+    while(i!=-1){
+        if(checkblock(i)){ //Verifie si le bloc est valide
+            memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
+            rewind(F.MDfile);
+            fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
+            X.id=buffer.chainee.enregistrement[0].ID;
+            X.numBloc= i; //Position du bloc pas de l'enregistrement
+            i=buffer.chainee.next;
+            memcpy(&tableIndex[k],&X,sizeof(Index)); //Ajout dans la table d'index
+            k++;
+        }
+    }
+    printf("\n la table d'index non dense à été crée avec succes.");
+}
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'index en "MS"
     //Lecture des metadonnees
     int nbBlocs = lireEntete(*F,2);
