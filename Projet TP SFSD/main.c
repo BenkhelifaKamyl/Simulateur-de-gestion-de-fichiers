@@ -11,7 +11,7 @@
 
 
 void menu(){
-    int c=0,k=0, nbE, ID;
+    int c=0,k=0, nbE, ID, i;
     char filename[30];
     fichier F;
     Enregistrement E;
@@ -35,7 +35,7 @@ void menu(){
         case 4: //Recherche d'enregistrement
             printf("\nDonnez le nom du fichier dont vous voulez rechercher un enregistrement: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             printf("\nDonnez l'ID de l'enregistrement que vous recherchez: ");
             scanf("%d",&ID);
             rechercheEnregistrement(F,ID);
@@ -43,7 +43,7 @@ void menu(){
         case 5: //Insertion enregistrement
             printf("\nDonnez le nom du fichier dont vous voulez inserer un enregistrement: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             printf("\nDonnez les Informations de l'enregistrement a inserer: ");
             E=donneesEnregistrement();
             insertRecord(&F,E);
@@ -51,7 +51,7 @@ void menu(){
         case 6: //Suppression d'un enregistrement
             printf("\nDonnez le nom du fichier dont vous voulez supprimer un enregistrement: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             do{
                 printf("\nVoulez vous supprimer un enregistrement: 1)Physiquement 2)Logiquement  ");
                 scanf("%d",&k);
@@ -66,19 +66,19 @@ void menu(){
         case 7: //Defragmentation
             printf("\nDonnez le nom du fichier dont vous voulez faire une defragmentation: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             Defragmentation(&F);
         break;
         case 8: //Suppression d'un fichier
             printf("\nDonnez le nom du fichier que vous voulez supprimer: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             deleteFile(&F);
             break;
         case 9: //Renommer un fichier
             printf("\nDonnez le nom du fichier que vous voulez renommer: ");
             scanf("%s", filename);
-            rechercheNomFichier(&F,filename);
+            rechercheNomFichier(&F,filename,&i);
             printf("\nDonnez le nouveau nom du fichier: ");
             scanf("%s", filename);
             MajEntetenom(&F, filename);
