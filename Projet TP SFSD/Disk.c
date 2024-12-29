@@ -363,121 +363,70 @@ void fillFileContigue(int fileID, bool isSorted, fichier *F) {
 
     printf("File %d filled in contiguous mode. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
 }
-
-void ChargerFichierchainee(int fileID, fichier *F) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
-        printf("Error: Invalid file ID %d.\n", fileID);
+void ChargerFichierChainee(int fileID, fichier *F) {
+    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Validate file ID
+        printf("Erreur : ID de fichier invalide %d.\n", fileID);
         return;
     }
+    // Vérifier si la table d'index existe
+    bool tableExists = (F->TableIndex != NULL);
+    Index tableIndex[MAX_BLOCKS]; // Supposons que MAX_BLOCKS est la limite supérieure
 
-    int allocatedBlocks = 0;
-    int firstBlockAddress = -1;
-    bool needsDefrag = false;
-    bool needsCompaction = false;
-    int lastFileBlock = -1;
-
-    // Temporary buffer to store records before writing to disk block
-    Enregistrement buffer[BLOCK_SIZE];
-
-    // Step 1: Traverse the disk and allocate blocks based on the allocation table (index table)
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        // Check if the current block is already allocated to the file in the index table
-        if (F->indexTable[i] == fileID) {
-            if (disk[i].free) { // If the block is free
-                disk[i].free = false; // Mark it as allocated
-
-                // Set the first block address if it's the first allocated block
-                if (firstBlockAddress == -1) {
-                    firstBlockAddress = i;
-                } else {
-                    // Link the previous block to the current block in the chain
-                    disk[lastFileBlock].next = i;
-                }
-
-                // Prepare the buffer with records for this block
-                for (int j = 0; j < BLOCK_SIZE; j++) {
-                    buffer[j].ID = fileID * BLOCK_SIZE + j + 1;
-                    snprintf(buffer[j].Data, sizeof(buffer[j].Data), "Record_%d", buffer[j].ID);
-                    buffer[j].Supprime = false; // Mark the record as not deleted
-                }
-
-                // Now write the buffer into the current block
-                for (int j = 0; j < BLOCK_SIZE; j++) {
-                    disk[i].enregistrement[j] = buffer[j];
-                }
-
-                // Set the current block as the last block for linking in the next iteration
-                lastFileBlock = i;
-                allocatedBlocks++;
-                printf("Block %d allocated for file %d.\n", i, fileID);
-
-                // If this is the last block for the file, mark the next pointer as -1
-                if (i == MAX_BLOCKS - 1 || F->indexTable[i + 1] != fileID) {
-                    disk[i].next = -1; // End of chain
-                }
-            }
+    // Créer la table d'index 
+    if (!tableExists) {
+        if (liretypeTri(F)) { // Index dense
+            creationTableIndexDense(*F, tableIndex); 
+            sauvegardeTableIndex(F, tableIndex);    
+        } else { // Index non-dense
+            creeTableIndexNonDense(*F, tableIndex);  
+            sauvegardeTableIndex(F, tableIndex);     
         }
-    }
-
-    // Step 2: Check if no blocks were allocated
-    if (allocatedBlocks == 0) {
-        printf("Error: No blocks available for file %d.\n", fileID);
-        return;
     } else {
-        printf("File %d loaded with %d blocks allocated.\n", fileID, allocatedBlocks);
+        // Charger le fichier
+        if (liretypeTri(F)) { // Index dense
+            chargementFichierIndexDense(F, tableIndex);
+        } else { // Index non-dense
+            chargementFichierIndexNonDense(F, tableIndex);
+        }
     }
+    int firstBlockAddress = lireEntete(*F, 4);  // Récupérer l'adresse du premier bloc
+    int allocatedBlocks = lireEntete(*F, 2);    // Récupérer le nombre de blocs alloués
+    int recordCount = lireEntete(*F, 3);        // Récupérer le nombre d'enregistrements depuis les métadonnées
+    MajEntetenum(F, 2, allocatedBlocks);       // Mise à jour du nombre de blocs alloués
+    MajEntetenum(F, 4, firstBlockAddress);     // Mise à jour de l'adresse du premier bloc
+    MajEntetenum(F, 3, recordCount);          // Mise à jour du nombre d'enregistrements
 
-    // Step 3: Update the metadata after loading the file
-    MajEntetenum(F, 2, allocatedBlocks); // Update metadata for block count
-    MajEntetenum(F, 3, allocatedBlocks * BLOCK_SIZE); // Update metadata for record count
-    MajEntetenum(F, 4, firstBlockAddress); // Update metadata for first block address
-
-    // Step 4: Check for fragmentation (block-level fragmentation)
+    // Suggestions pour la fragmentation et la compaction
+    int previousBlock = -1;
     bool fragmented = false;
-    lastFileBlock = -1;
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (F->indexTable[i] == fileID) { // Block is allocated
-            if (lastFileBlock != -1 && i != lastFileBlock + 1) {
-                fragmented = true; // Fragmentation detected
-                break;
-            }
-            lastFileBlock = i;
-        }
-    }
-
-    if (fragmented) {
-        printf("File %d is fragmented. Defragmentation suggested.\n", fileID);
-        needsDefrag = true;
-    }
-
-    // Step 5: Check for free blocks and suggest compaction
-    needsCompaction = false;
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (disk[i].free && F->indexTable[i] != fileID) { // Check if block is free and not allocated to the file
-            needsCompaction = true;
-            break;
-        }
-    }
-
-    if (needsCompaction) {
-        printf("File %d has free blocks. Compaction suggested.\n", fileID);
-    }
-
-    // Step 6: Update the index table for blocks allocated to the file
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (!disk[i].free && F->indexTable[i] == -1) { // Block is allocated and not yet in indexTable
-            F->indexTable[i] = fileID; // Set the file ID for this block in the index table
-        }
-    }
-
-    // Step 7: Update metadata (e.g., free block count)
+    bool needsCompaction = false;
     int freeBlockCount = 0;
+    
+    int currentBlock = firstBlockAddress;
+    while (currentBlock != -1) {
+        if (previousBlock != -1 && currentBlock != previousBlock + 1) {
+            fragmented = true;  // Fragmentation détectée
+        }
+        previousBlock = currentBlock;
+        currentBlock = disk[currentBlock].next;
+    }
+
     for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (disk[i].free) {
+        if (disk[i].free && F->TableIndex[i] != fileID) {  // Si le bloc est libre et pas déjà alloué au fichier
             freeBlockCount++;
+            needsCompaction = true;  // Suggérer la compaction si des blocs libres sont trouvés
         }
     }
-    MajEntetenum(F, 5, freeBlockCount); // Update metadata for the number of free blocks
+
+    //suggestions
+    if (fragmented) {
+        printf("Le fichier %d est fragmenté. Une défragmentation est suggérée.\n", fileID);
+    }
+    if (needsCompaction) {
+        printf("Le fichier %d a des blocs libres. La compaction est suggérée.\n", fileID);
+    }
+    printf("Fichier %d chargé avec succès avec %d blocs et %d enregistrements.\n", 
+           fileID, allocatedBlocks, recordCount);
 }
 
 void ChargerFichierContigue(int fileID, fichier *F) {
