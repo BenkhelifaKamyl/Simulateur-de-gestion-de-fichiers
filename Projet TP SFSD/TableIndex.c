@@ -85,10 +85,7 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
             memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
             rewind(F.MDfile);
             fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
-            if(MD.globalOrg==Chainee)
-                    X.id=buffer.chainee.enregistrement[0].ID;
-            else
-                    X.id=buffer.contigue.enregistrement[0].ID;
+            X.id=buffer.contigue.enregistrement[0].ID;
             X.numBloc= i; //Position du bloc pas de l'enregistrement
             memcpy(&tableIndex[k],&X,sizeof(Index)); //Ajout dans la table d'index
             k++;

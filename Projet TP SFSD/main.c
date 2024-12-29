@@ -11,23 +11,33 @@
 
 
 void menu(){
-    int c=0,k=0, nbE, ID, i;
+    int c1,c=0,k=0, nbE, ID, i;
     char filename[30];
     fichier F;
     Enregistrement E;
 
         printf("Bienvenue dans le simulateur de gestion de fichiers!!!\n\n");
-        initializeDiskChainee();
+        do{
+            printf("Voulez vous une organisation: 1)chainee ou 2)contigue: ");
+            scanf("%d",&c1);
+        }while(c1<1 || c1>2);
+        if(c1==1)
+            initializeDiskChainee();
+        else
+            initializeDiskContigue();
 
     do{
         printf("\nChoisissez ce que vous voulez faire:\n 1)Creer un fichier, 2)Afficher la memoire secondaire, \n3) Afficher les metadonnees des fichiers, 4) Rechercher un enregistrement, \n5) Inserer un enregistrement, 6) Supprimer un enregistrement, \n7) Defragmenter un fichier, 8) Supprimer un fichier, \n9) Renommer un fichier, 10) Compactage de la memoire secondaire, \n11) Vider la memoire secondaire, 12) Quitter le programme.\n");
         scanf("%d",&c);
         switch (c){
         case 1: //Creation d'un fichier (Manque table d'index)
-            OuvrirFichier(&F,'w');
+            OuvrirFichier(&F,'w',c1);
             break;
         case 2: //Afficher Disque
-            AfficherDisque();
+            if(c1==1)
+                AfficherDisqueChainee();
+            else
+                AfficherDisqueContigue();
             break;
         case 3: //Afficher les metadonnees
             AfficherEntete();
@@ -84,7 +94,10 @@ void menu(){
             MajEntetenom(&F, filename);
             break;
         case 10: //Compactage
-            compactDisk();
+            if(c1==1)
+                compactDiskChainee();
+            else
+                compactDiskContigue();
             break;
         case 11: //Vider le disque
             clearDisk();

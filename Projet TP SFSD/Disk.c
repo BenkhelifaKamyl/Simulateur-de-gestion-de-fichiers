@@ -7,7 +7,26 @@
 #include "TableIndex.h"
 #include "Disk.h"
 //Affichage du disque
-void AfficherDisque(){
+void AfficherDisqueContigue(){
+    Bloc buffer;
+    int j;
+    fichier F;
+    char filename[30];
+    for(int i=0; i<MAX_BLOCKS; i++){
+        if(checkBlockContigue(i)==false)
+                printf("\nBloc libre.");
+        else{
+            memcpy(&buffer, &disk[i],sizeof(Bloc));
+            j=0;
+            while(j<BLOCK_SIZE && strlen(disk[i].contigue.enregistrement[j].Data)!=0)
+                j++;
+            rechercheFichierMeta(i, &F);
+            lireNomFichier(F,filename);
+            printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+        }
+    }
+}
+void AfficherDisqueChainee(){
     Bloc buffer;
     int j;
     for(int i=0; i<MAX_BLOCKS; i++){
@@ -23,20 +42,20 @@ void AfficherDisque(){
     }
 }
 
-// Initialisation d'un bloc pour l'organisation chaÃ®nÃ©e
+// Initialisation d'un bloc pour l'organisation chaînée
 void initializeBlockChainee(int i) {
     disk[i].chainee.free = true;
     disk[i].chainee.next = -1;
     memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);
 }
 
-// Initialisation d'un bloc pour l'organisation contiguÃ«
+// Initialisation d'un bloc pour l'organisation contiguë
 void initializeBlockContigue(int i) {
     disk[i].contigue.free = true;
     memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE);
 }
 
-// Initialisation du disque en mode chaÃ®nÃ©
+// Initialisation du disque en mode chaîné
 void initializeDiskChainee() {
     if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
         printf("Erreur : configuration de disque invalide.\n");
@@ -45,10 +64,10 @@ void initializeDiskChainee() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         initializeBlockChainee(i);
     }
-    printf("Disque initialisÃ© avec %d blocs en mode chaÃ®nÃ©.\n", MAX_BLOCKS);
+    printf("Disque initialisé avec %d blocs en mode chaîné.\n", MAX_BLOCKS);
 }
 
-// Initialisation du disque en mode contiguÃ«
+// Initialisation du disque en mode contiguë
 void initializeDiskContigue() {
     if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
         printf("Erreur : configuration de disque invalide.\n");
@@ -57,21 +76,7 @@ void initializeDiskContigue() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         initializeBlockContigue(i);
     }
-    printf("Disque initialisÃ© avec %d blocs en mode contiguÃ«.\n", MAX_BLOCKS);
-}
-//compact disk
-void compactDisk() {
-//    rechercheFichierMeta()
-   typeOrganisation orgType; //lireEnteteGlobal(F);
-    if (orgType == Chainee) {
-        printf("Compacting disk with chained organization...\n");
-        compactDiskChainee();
-    } else if (orgType == Contigue) {
-        printf("Compacting disk with contiguous organization...\n");
-        compactDiskContigue();
-    } else {
-        printf("Unknown disk organization. Cannot compact.\n");
-    }
+    printf("Disque initialisé avec %d blocs en mode contiguë.\n", MAX_BLOCKS);
 }
 
 // Compactage du Disque avec Buffer (chainee)
@@ -114,11 +119,9 @@ void compactDiskChainee() {
     printf("Disk compacted in chained mode.\n");
 }
 
-
-
 // Compactage du Disque avec Buffer (contigue)
 void compactDiskContigue() {
-    Bloc buffer; // Buffer temporaire pour le dÃ©placement
+    Bloc buffer; // Buffer temporaire pour le déplacement
     int lastFreeBlock = -1;
     fichier F;
 
@@ -131,13 +134,13 @@ void compactDiskContigue() {
             // Utilise le buffer temporaire
             memcpy(&buffer, &disk[i], sizeof(Bloc));
 
-            // DÃ©place le bloc dans l'espace libre
+            // Déplace le bloc dans l'espace libre
             memcpy(&disk[lastFreeBlock], &buffer, sizeof(Bloc));
             if(F->MDfile!=NULL){
                 MajEntetenum(&F,4,lastFreeBlock);
                 chargerMetadonnees(F);
             }
-            // LibÃ¨re l'ancien bloc
+            // Libère l'ancien bloc
             disk[i].contigue.free = true;
 
             // Trouve le prochain bloc libre
@@ -153,50 +156,42 @@ void compactDiskContigue() {
     printf("Disque compacte en mode contigu.\n");
 }
 
-void clearDisk(); //Need to fill this function
-// 4 Vider la MÃ©moire Secondaire (chainee)
+// 4 Vider la Mémoire Secondaire (chainee)
 void clearDiskchainee() {
+    fichier F;
     // Clear all blocks by setting them as free
     for (int i = 0; i < MAX_BLOCKS; i++) {
         disk[i].chainee.free = true;
         disk[i].chainee.next = -1;  // Reset the next pointer for chained blocks
         memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);  // Clear the block content
+        chargerFichierMetadonnees(i,&F);
+        if(F.MDfile!=NULL){
+            supprimeFichierMetadonnees(&F);
+            clearIndexTable(&F);
+        }
     }
-
-    // Update the metadata to reflect the cleared disk
-    MajEntetenum(F, 2, 0);  // Set the number of blocks to 0
-    MajEntetenum(F, 3, 0);  // Set the number of records to 0
-    MajEntetenum(F, 4, 0);  // Set the first address to 0
-
-    // Update the index table: clear the entries, as all blocks are free
-  //  clearIndexTable(F);
-
-    // Print confirmation message
     printf("Disk cleared.\n");
 }
 
 
- // Vider la MÃ©moire Secondaire (contigue)
+ // Vider la Mémoire Secondaire (contigue)
 void clearDiskContigue() {
+    fichier F;
     // Clear all blocks by setting them as free
     for (int i = 0; i < MAX_BLOCKS; i++) {
-        disk[i].contigue.free = true;  // Set the block as free
+        disk[i].contigue.free = true;
+        disk[i].contigue.next = -1;  // Reset the next pointer for chained blocks
         memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE);  // Clear the block content
+        chargerFichierMetadonnees(i,&F);
+        if(F.MDfile!=NULL){
+            supprimeFichierMetadonnees(&F);
+            clearIndexTable(&F);
+        }
     }
-
-    // Update the metadata to reflect the cleared disk
-    MajEntetenum(F, 2, 0);  // Set the number of blocks to 0
-    MajEntetenum(F, 3, 0);  // Set the number of records to 0
-    MajEntetenum(F, 4, 0);  // Set the first address to 0
-
-    // Update the index table: clear the entries, as all blocks are free
-    // clearIndexTable(F);
-
-    // Print confirmation message
-    printf("Disk cleared in contigu mode.\n");
+    printf("Disk cleared.\n");
 }
 
-//5VÃ©rification d'un Bloc(chainee)
+//5Vérification d'un Bloc(chainee)
 bool checkBlock(int blockID) { // retourne vrai si il est rempli et faux si il est libre ou n'existe pas
     if (blockID >= 0 && blockID < MAX_BLOCKS) {
         return !disk[blockID].chainee.free;
@@ -232,8 +227,8 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F) {
 
     // Sort the buffer if required
     if (isSorted) {
-        for (int i = 0; i < BUFFER_SIZE - 1; i++) {
-            for (int j = i + 1; j < BUFFER_SIZE; j++) {
+        for (int i = 0; i < BUFFER_SIZE - 1 && i < nbEnregistrements - 1; i++) {
+            for (int j = i + 1; j < BUFFER_SIZE && j < nbEnregistrements ; j++) {
                 if (buffer[j].ID < buffer[i].ID) {
                     Enregistrement temp = buffer[i];
                     buffer[i] = buffer[j];
@@ -244,7 +239,7 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F) {
     }
 
     // Allocate the first block if premiereAdresse is invalid
-    int currentBlockAddress = premiereAdresse < 0 ? AllouerBloc() : premiereAdresse;
+    int currentBlockAddress = premiereAdresse < 0 ? AllouerBlocChainee() : premiereAdresse;
     int previousBlockAddress = -1;
 
     if (currentBlockAddress == -1) {
@@ -255,7 +250,7 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F) {
     // Allocate and fill the required number of blocks
     for (int i = 0; i < nbBlocs && recordsFilled < nbEnregistrements; i++) {
         if (currentBlockAddress == -1) {
-            currentBlockAddress = AllouerBloc();
+            currentBlockAddress = AllouerBlocChainee();
             if (currentBlockAddress == -1) {
                 printf("Error: Unable to allocate block for file %d.\n", fileID);
                 break;
@@ -278,7 +273,7 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F) {
 
         // Update previous block and allocate next block
         previousBlockAddress = currentBlockAddress;
-        currentBlockAddress = AllouerBloc();
+        currentBlockAddress = AllouerBlocChainee();
     }
 
     // Mark the end of the file's block chain
@@ -357,11 +352,11 @@ void ChargerFichierChainee(int fileID, fichier *F) {
         printf("Erreur : ID de fichier invalide %d.\n", fileID);
         return;
     }
-    // VÃ©rifier si la table d'index existe
+    // Vérifier si la table d'index existe
     bool tableExists = (F->TableIndex != NULL);
-    Index tableIndex[MAX_BLOCKS]; // Supposons que MAX_BLOCKS est la limite supÃ©rieure
+    Index tableIndex[MAX_BLOCKS]; // Supposons que MAX_BLOCKS est la limite supérieure
 
-    // CrÃ©er la table d'index
+    // Créer la table d'index
     if (!tableExists) {
         if (liretypeTri(F)) { // Index dense
             creationTableIndexDense(*F, tableIndex);
@@ -378,12 +373,12 @@ void ChargerFichierChainee(int fileID, fichier *F) {
             chargementFichierIndexNonDense(F, tableIndex);
         }
     }
-    int firstBlockAddress = lireEntete(*F, 4);  // RÃ©cupÃ©rer l'adresse du premier bloc
-    int allocatedBlocks = lireEntete(*F, 2);    // RÃ©cupÃ©rer le nombre de blocs allouÃ©s
-    int recordCount = lireEntete(*F, 3);        // RÃ©cupÃ©rer le nombre d'enregistrements depuis les mÃ©tadonnÃ©es
-    MajEntetenum(F, 2, allocatedBlocks);       // Mise Ã  jour du nombre de blocs allouÃ©s
-    MajEntetenum(F, 4, firstBlockAddress);     // Mise Ã  jour de l'adresse du premier bloc
-    MajEntetenum(F, 3, recordCount);          // Mise Ã  jour du nombre d'enregistrements
+    int firstBlockAddress = lireEntete(*F, 4);  // Récupérer l'adresse du premier bloc
+    int allocatedBlocks = lireEntete(*F, 2);    // Récupérer le nombre de blocs alloués
+    int recordCount = lireEntete(*F, 3);        // Récupérer le nombre d'enregistrements depuis les métadonnées
+    MajEntetenum(F, 2, allocatedBlocks);       // Mise à jour du nombre de blocs alloués
+    MajEntetenum(F, 4, firstBlockAddress);     // Mise à jour de l'adresse du premier bloc
+    MajEntetenum(F, 3, recordCount);          // Mise à jour du nombre d'enregistrements
 
     // Suggestions pour la fragmentation et la compaction
     int previousBlock = -1;
@@ -394,27 +389,27 @@ void ChargerFichierChainee(int fileID, fichier *F) {
     int currentBlock = firstBlockAddress;
     while (currentBlock != -1) {
         if (previousBlock != -1 && currentBlock != previousBlock + 1) {
-            fragmented = true;  // Fragmentation dÃ©tectÃ©e
+            fragmented = true;  // Fragmentation détectée
         }
         previousBlock = currentBlock;
         currentBlock = disk[currentBlock].next;
     }
 
     for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (disk[i].free && F->TableIndex[i] != fileID) {  // Si le bloc est libre et pas dÃ©jÃ  allouÃ© au fichier
+        if (disk[i].free && F->TableIndex[i] != fileID) {  // Si le bloc est libre et pas déjà alloué au fichier
             freeBlockCount++;
-            needsCompaction = true;  // SuggÃ©rer la compaction si des blocs libres sont trouvÃ©s
+            needsCompaction = true;  // Suggérer la compaction si des blocs libres sont trouvés
         }
     }
 
     //suggestions
     if (fragmented) {
-        printf("Le fichier %d est fragmentÃ©. Une dÃ©fragmentation est suggÃ©rÃ©e.\n", fileID);
+        printf("Le fichier %d est fragmenté. Une défragmentation est suggérée.\n", fileID);
     }
     if (needsCompaction) {
-        printf("Le fichier %d a des blocs libres. La compaction est suggÃ©rÃ©e.\n", fileID);
+        printf("Le fichier %d a des blocs libres. La compaction est suggérée.\n", fileID);
     }
-    printf("Fichier %d chargÃ© avec succÃ¨s avec %d blocs et %d enregistrements.\n",
+    printf("Fichier %d chargé avec succès avec %d blocs et %d enregistrements.\n",
            fileID, allocatedBlocks, recordCount);
 }
 
@@ -779,7 +774,7 @@ void SuppressionLogique(fichier *F, int recordId) {
 //     Buffer.chainee.free = true;  // Assuming the record has a 'deleted' flag
 //     EcrireBloc(F, recordPosition, Buffer);
 
-//     printf("Suppression logique effectuÃ©e pour l'enregistrement %d.\n", recordId);
+//     printf("Suppression logique effectuée pour l'enregistrement %d.\n", recordId);
 
 //     // Perform defragmentation after logical deletion
 //     Defragmentation(F);
@@ -803,7 +798,7 @@ void SuppressionLogique(fichier *F, int recordId) {
 //     // Update the block to indicate it's free (or deleted)
 //     EcrireBloc(F, recordPosition, Buffer);
 
-//     printf("Suppression physique effectuÃ©e pour l'enregistrement %d.\n", recordId);
+//     printf("Suppression physique effectuée pour l'enregistrement %d.\n", recordId);
 
 //     // Update metadata: reduce the number of records
 //     int nbEnregistrements = lireEntete(*F, 3);  // Read the number of records from metadata
@@ -862,14 +857,14 @@ void Defragmentation(fichier *F){
 }
 // Function to perform defragmentation(chained): update metadata, table index, and compact blocks
 void Defragmentationchainee(fichier *F) {
-    printf("DÃ©fragmentation en cours...\n");
+    printf("Défragmentation en cours...\n");
 
     int nbBlocs = lireEntete(*F, 2);  // Read the number of blocks from metadata
     int nbEnregistrements = lireEntete(*F, 3);  // Read the number of records from metadata
     int freeBlockIndex = AllouerBloc();  // Get the next free block index
 
     if (freeBlockIndex == -1) {
-        printf("Pas de blocs libres disponibles pour la dÃ©fragmentation.\n");
+        printf("Pas de blocs libres disponibles pour la défragmentation.\n");
         return;
     }
 
@@ -892,7 +887,7 @@ void Defragmentationchainee(fichier *F) {
     // Update metadata after defragmentation (number of blocks, records, etc.)
     MajEntetenum(F, 2, nbBlocs);  // Update number of blocks after defragmentation
     MajEntetenum(F, 3, nbEnregistrements);  // Update number of records
-    printf("DÃ©fragmentation terminÃ©e.\n");
+    printf("Défragmentation terminée.\n");
 }
 
 // Function to perform defragmentation(contiguous) : update metadata, table index, and compact blocks

@@ -7,8 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-MetaDonnee creationFichier(){ //Saisie des informations du fichier
-    int orgGlobale;
+MetaDonnee creationFichier(int choix){ //Saisie des informations du fichier
     int orgInterne;
     MetaDonnee MD;
     printf("\nDonnez le nom du fichier de metadonnees: ");
@@ -16,12 +15,7 @@ MetaDonnee creationFichier(){ //Saisie des informations du fichier
     printf("\nDonnez le nombre d'enregistrements du fichier: ");
     scanf("%d",&MD.nbEnregistrements);
     printf("\nDonnez le type d'organisation globale: 1) Chainee 2) Contigue");
-    do{
-        scanf("%d",&orgGlobale);
-        if (orgGlobale != 1 && orgGlobale != 2)
-            printf("Entrée invalide. Veuillez entrer 1 pour Chainee ou 2 pour Contigue.\n");
-    } while(orgGlobale!=2 && orgGlobale!=1);
-    if(orgGlobale==1)
+    if(choix==1)
         MD.globalOrg = Chainee;
     else
         MD.globalOrg = Contigue;
@@ -35,12 +29,15 @@ MetaDonnee creationFichier(){ //Saisie des informations du fichier
         MD.interneOrg = triee;
     else
         MD.interneOrg = nonTriee;
-    MD.premiereAdresse = AllouerBloc();
+    if(choix ==1)
+        MD.premiereAdresse = AllouerBlocChainee();
+    else
+        MD.premiereAdresse = AllouerBlocContigue();
     return MD;
 }
-void creationFichierMetadonnees(fichier *F){ //Permet de creer le fichier et de le charger en "MS"
+void creationFichierMetadonnees(fichier *F, int choix){ //Permet de creer le fichier et de le charger en "MS"
     MetaDonnee buffer;
-    buffer = creationFichier(); //Recupere les infos du fichier a inserer
+    buffer = creationFichier(choix); //Recupere les infos du fichier a inserer
     F->MDfile = fopen(buffer.name, "wb+");
     fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
     chargerMetadonnees(*F); //Le charger en "MS"
@@ -171,11 +168,11 @@ void AfficherEntete(){ //Affiche les informations de tous les fichiers de metado
         i++;
     }
 }
-void OuvrirFichier(fichier *F, char mode){ //Ouvre le fichier, "w" pour ecrire et "r" pour lire
+void OuvrirFichier(fichier *F, char mode, int choix){ //Ouvre le fichier, "w" pour ecrire et "r" pour lire
     MetaDonnee buffer;
     if(mode=='w'){ //Mode ecriture
         printf("\nFichier ouvert en mode ecriture.");
-        creationFichierMetadonnees(F); //Cree et charge le fichier de metadonnees en "MS"
+        creationFichierMetadonnees(F, choix); //Cree et charge le fichier de metadonnees en "MS"
         if(F->MDfile!=NULL){ //Remplis le fichier sur le disk selon les modes d'organisation
             if(lireEnteteGlobal(*F)==Chainee)
                 fillFileChainee(-1, liretypeTri(*F), F);
@@ -199,9 +196,17 @@ void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
     fclose(F.TableIndex);
     fclose(F.MDfile);
 }
-int AllouerBloc(){ //Retourne le premier bloc libre
+int AllouerBlocChainee(){ //Retourne le premier bloc libre
     int i=0;
     while(i<MAX_BLOCKS &&disk[i].chainee.free==false)
+        i++;
+    if(i<MAX_BLOCKS)
+        return i;
+    return -1;
+}
+int AllouerBlocContigue(){ //Retourne le premier bloc libre
+    int i=0;
+    while(i<MAX_BLOCKS &&disk[i].contigue.free==false)
         i++;
     if(i<MAX_BLOCKS)
         return i;
@@ -285,3 +290,25 @@ void rechercheNomFichier(fichier *F, char filename[30], int *i){
     }
     fclose(Meta);
 }
+void supprimeFichierMetadonnees(fichier *F){
+    FILE *temp = fopen("temp.bin","wb+");
+    int i;
+    char filename[30];
+    lireNomFichier(*F,filename);
+    rechercheNomFichier(F,filename,&i);
+    Meta = fopen("Meta.bin","rb+");
+    MetaDonnee buffer;
+    while(fread(&buffer,sizeof(MetaDonnee),1,Meta)==1){
+        if(strcmp(filename,buffer.name)!=0)
+            fwrite(&buffer,sizeof(MetaDonnee),1,temp);
+    }
+    fclose(Meta); fclose(temp);
+    temp = fopen("temp.bin","rb+");
+    Meta = fopen("Meta.bin","wb+");
+    while(fread(&buffer,sizeof(MetaDonnee),1,temp)==1){
+        fwrite(&buffer,sizeof(MetaDonnee),1,Meta);
+    }
+    fclose(Meta); fclose(temp);
+}
+
+
