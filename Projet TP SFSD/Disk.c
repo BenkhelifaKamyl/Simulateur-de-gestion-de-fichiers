@@ -223,15 +223,19 @@ bool checkBlock(int blockID) {
 // Fill a File (Sorted or Unsorted) Using a Buffer (chainee)
 void fillFileChainee(int fileID, bool isSorted, fichier *F) {
     const int BUFFER_SIZE = BLOCK_SIZE;
-    Enregistrement buffer[BUFFER_SIZE];  // Declare buffer
-    int recordsFilled = 0;
-    int blocksUsed = 0;
-    int firstBlockAddress = -1;
-    int lastBlockAddress = -1;
+    Enregistrement buffer[BUFFER_SIZE];
     int bufferIndex = 0;
+    int recordsFilled = 0;
+    int nbBlocs = lireEntete(*F, 2);        
+    int nbEnregistrements = lireEntete(*F, 3); 
+    int premiereAdresse = lireEntete(*F, 4);  
+    if (nbBlocs <= 0 || nbEnregistrements <= 0) {
+        printf("Error: Invalid metadata for file %d.\n", fileID);
+        return;
+    }
 
-    // Fill buffer with records
-    for (int i = 0; i < BUFFER_SIZE; i++) {
+    // Fill buffer 
+    for (int i = 0; i < BUFFER_SIZE && i < nbEnregistrements; i++) {
         buffer[i].ID = fileID * BUFFER_SIZE + i + 1;
         snprintf(buffer[i].Data, sizeof(buffer[i].Data), "Record_%d", buffer[i].ID);
         buffer[i].Supprime = false;
@@ -250,36 +254,57 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F) {
         }
     }
 
-    // Insert records from buffer into the disk
-    for (int i = 0; i < MAX_BLOCKS && bufferIndex < BUFFER_SIZE; i++) {
-        if (disk[i].chainee.free) {
-            disk[i].chainee.free = false;
-            blocksUsed++;
+    // Allocate the first block if premiereAdresse is invalid
+    int currentBlockAddress = premiereAdresse < 0 ? AllouerBloc() : premiereAdresse;
+    int previousBlockAddress = -1;
 
-            // Update the first and last block addresses
-            if (firstBlockAddress == -1)
-                firstBlockAddress = i;
-
-            if (lastBlockAddress != -1)
-                disk[lastBlockAddress].chainee.next = i;
-
-            lastBlockAddress = i;
-
-            // Copy buffer records to the current disk block
-            for (int j = 0; j < BLOCK_SIZE && bufferIndex < BUFFER_SIZE; j++) {
-                disk[i].chainee.enregistrement[j] = buffer[bufferIndex++];
-                recordsFilled++;
-            }
-        }
+    if (currentBlockAddress == -1) {
+        printf("Error: No free block available to start filling file %d.\n", fileID);
+        return;
     }
 
-    // Update metadata
-    MajEntetenum(F, 3, recordsFilled);     // Number of records
-    MajEntetenum(F, 2, blocksUsed);        // Number of blocks used
-    MajEntetenum(F, 4, firstBlockAddress); // First block address
+    // Allocate and fill the required number of blocks
+    for (int i = 0; i < nbBlocs && recordsFilled < nbEnregistrements; i++) {
+        if (currentBlockAddress == -1) {
+            currentBlockAddress = AllouerBloc(); 
+            if (currentBlockAddress == -1) {
+                printf("Error: Unable to allocate block for file %d.\n", fileID);
+                break;
+            }
+        }
 
-    printf("File %d filled. Sorted: %s\n", fileID, isSorted ? "Yes" : "No");
+        // Mark block as used
+        disk[currentBlockAddress].chainee.free = false;
+
+        // Link previous block to the current block
+        if (previousBlockAddress != -1) {
+            disk[previousBlockAddress].chainee.nextBlock = currentBlockAddress;
+        }
+
+        // Fill the current block with records
+        for (int j = 0; j < BLOCK_SIZE && recordsFilled < nbEnregistrements; j++) {
+            disk[currentBlockAddress].chainee.enregistrement[j] = buffer[bufferIndex++];
+            recordsFilled++;
+        }
+
+        // Update previous block and allocate next block
+        previousBlockAddress = currentBlockAddress;
+        currentBlockAddress = AllouerBloc();
+    }
+
+    // Mark the end of the file's block chain
+    if (previousBlockAddress != -1) {
+        disk[previousBlockAddress].chainee.nextBlock = -1;
+    }
+
+    // Update metadata with the actual number of records filled
+    MajEntetenum(F, 3, recordsFilled); // Update number of records
+    MajEntetenum(F, 2, nbBlocs);       // Update number of blocks
+    MajEntetenum(F, 4, premiereAdresse < 0 ? previousBlockAddress : premiereAdresse); // Update first block address
+
+    printf("File %d filled with %d records. Sorted: %s\n", fileID, recordsFilled, isSorted ? "Yes" : "No");
 }
+
 
 // Fill a File (Sorted or Unsorted) Using a Buffer (contigue)
 void fillFileContigue(int fileID, bool isSorted, fichier *F) {
