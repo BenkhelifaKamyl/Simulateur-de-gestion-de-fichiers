@@ -27,6 +27,7 @@ typedef union { //permet de regrouper les deux types de blocs dans une seule str
 
 Bloc disk[MAX_BLOCKS];    // Disque virtuel avec des blocs
 
+bool isDiskContigu();
 //Affiche le disque
 void AfficherDisqueContigue();
 void AfficherDisqueChainee();
@@ -48,7 +49,8 @@ bool checkBlockContigue(int blockId); //cas contigu
 void fillFileChainee(int fileID, bool isSorted, fichier *F);
 void fillFileContigue(int fileID, bool isSorted, fichier *F);
 //Chargement
-void ChargerFichier(int fileID, fichier *F);
+void ChargerFichierChainee(int fileID, fichier *F);
+bool ChargerFichierContigue(int fileID, fichier *F);
 //Remplissage Enregistrement
 Enregistrement donneesEnregistrement();
 //Insertion

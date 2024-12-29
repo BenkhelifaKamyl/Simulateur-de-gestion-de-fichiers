@@ -29,10 +29,7 @@ MetaDonnee creationFichier(int choix){ //Saisie des informations du fichier
         MD.interneOrg = triee;
     else
         MD.interneOrg = nonTriee;
-    if(choix ==1)
-        MD.premiereAdresse = AllouerBlocChainee();
-    else
-        MD.premiereAdresse = AllouerBlocContigue();
+        MD.premiereAdresse = -1;
     return MD;
 }
 void creationFichierMetadonnees(fichier *F, int choix){ //Permet de creer le fichier et de le charger en "MS"
@@ -40,7 +37,10 @@ void creationFichierMetadonnees(fichier *F, int choix){ //Permet de creer le fic
     buffer = creationFichier(choix); //Recupere les infos du fichier a inserer
     F->MDfile = fopen(buffer.name, "wb+");
     fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
-    chargerMetadonnees(*F); //Le charger en "MS"
+    if(choix==1) //Verifier si on peut creer le fichier
+        ChargerFichierChainee(,*F);
+    else
+        ChargerFichierContigue(,*F);
 }
 void lireNomFichier(fichier F, char nomFichier[30]){ //Lire le nom du fichier
     rewind(F.MDfile);
@@ -69,6 +69,12 @@ typeOrganisation lireEnteteGlobal(fichier F){ //Retourne si le fichier suit une 
     MetaDonnee MD;
     fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
     return MD.globalOrg;
+}
+typeOrganisation(int nc){
+    if(nc==1)
+        return Chainee;
+    else
+        return Contigue;
 }
 bool liretypeTri(fichier F){ //Retourne vrai si le fchier est trie, sinon faux
     rewind(F.MDfile);
@@ -173,7 +179,7 @@ void OuvrirFichier(fichier *F, char mode, int choix){ //Ouvre le fichier, "w" po
     if(mode=='w'){ //Mode ecriture
         printf("\nFichier ouvert en mode ecriture.");
         creationFichierMetadonnees(F, choix); //Cree et charge le fichier de metadonnees en "MS"
-        if(F->MDfile!=NULL){ //Remplis le fichier sur le disk selon les modes d'organisation
+        if(F->MDfile!=NULL && lireEntete(*F,4)!=-1){ //Remplis le fichier sur le disk selon les modes d'organisation
             if(lireEnteteGlobal(*F)==Chainee)
                 fillFileChainee(-1, liretypeTri(*F), F);
             else
