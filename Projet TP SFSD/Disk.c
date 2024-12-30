@@ -877,10 +877,7 @@ void deleteFile(fichier *F){
 // Delete a file with chained allocation
 void deleteFilechainee(fichier *F) {
     int firstAdress = lireEntete(*F,4);
-    int nbBlocs = lireEntete(*F,2);
-    int nbEnregistrements = lireEntete(*F,3);
-
-    int currentBlockID = firstAdress,nbBlocsLibres = 0;  // Counter for free blocks
+    int currentBlockID = firstAdress;  // Counter for free blocks
 
     // Traverse and free all blocks of the file using the linked list
     while (currentBlockID!=-1) {
@@ -902,50 +899,23 @@ void deleteFilechainee(fichier *F) {
 
 // Delete a file with contiguous allocation
 void deleteFileContigue(fichier *F) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Validate file ID
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
+    int firstAdress = lireEntete(*F,4);
+    int nbBlocs = lireEntete(*F,2);
 
-    // Find the first block of the file using contiguous allocation
-    int currentBlockID = -1;
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (!disk[i].contigue.free && disk[i].contigue.fileID == fileID) {
-            currentBlockID = i;  // Found the first block
-            break;
-        }
-    }
+    // Traverse and free all blocks of the file using the linked list
+    for(int i = firstAdress; i<nbBlocs+firstAdress; i++) {
+        int nextBlockID = disk[currentBlockID].chainee.next;  // Store next block ID
 
-    if (currentBlockID == -1) {  // If no block is found
-        printf("Error: File with ID %d not found.\n", fileID);
-        return;
-    }
-
-    int nbBlocsLibres = 0;  // Counter for free blocks
-
-    // Traverse and free all blocks of the file
-    while (currentBlockID != -1) {
         // Clear current block
-        disk[currentBlockID].contigue.free = true;
-        disk[currentBlockID].contigue.fileID = -1;
+        initializeBlockContigue(currentBlockID); //Reinitialise le bloc
 
-        for (int j = 0; j < BLOCK_SIZE; j++) {  // Clear records in the block
-            disk[currentBlockID].contigue.enregistrement[j].ID = -1;
-            disk[currentBlockID].contigue.enregistrement[j].Supprime = false;
-            memset(disk[currentBlockID].contigue.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].contigue.enregistrement[j].Data));
-        }
-
-        nbBlocsLibres++;  // Increase count of freed blocks
-        currentBlockID = -1;  // No next block in contiguous allocation
+        currentBlockID = nextBlockID;  // Move to the next block
     }
-
-    // Update metadata
-    MajEntetenum(F, 2, lireEntete(*F, 2) - nbBlocsLibres);  // Update the number of blocks
-    MajEntetenum(F, 3, 0);  // Reset number of records to 0
-    MajEntetenum(F, 4, -1);  // Reset the first block address
 
     // Remove file from the index table
-    removeFromIndexTable(fileID);
+    removeFromIndexTable(*F); // SUpprime la table d'index
+
+    supprimeFichierMetadonnees(F); //Supprime le fichier de metadonnees
 
     printf("File %d deleted successfully.\n", fileID);
 }

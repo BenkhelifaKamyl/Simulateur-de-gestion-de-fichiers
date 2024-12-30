@@ -37,7 +37,7 @@ void MajTableIndexDense(fichier *F, Enregistrement E, int mode); //mode 1: inser
 void MajTableIndexNonDense(fichier *F, Enregistrement E, int mode); //Ne pas oublier de charger le fichier en MS
 void clearIndexTable(fichier *F); // Update the index table: clear the entries, as all blocks are free
 
-void removeIndexTable(fichier *F);
+void removeIndexTable(fichier *F); //Supprime le fichier d'index de la MS
 
 
 #endif // TABLEINDEX_H_INCLUDED
