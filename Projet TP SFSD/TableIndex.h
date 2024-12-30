@@ -33,8 +33,8 @@ void chargementFichierIndexNonDense(fichier F, Index tableIndex[]);
 void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplacement);
 void rechercheEnregistrementNonDense(fichier *F, int ID, int *numBloc, int *deplacement);
 //Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
-void MajTableIndexDense();
-void MajTableIndexNonDense();
+void MajTableIndexDense(fichier *F, Enregistrement E, int mode); //mode 1: insertion, mode 2: suppression
+void MajTableIndexNonDense(fichier *F, Enregistrement E, int mode); //Ne pas oublier de charger le fichier en MS
 void clearIndexTable(fichier *F); // Update the index table: clear the entries, as all blocks are free
 
 
