@@ -66,7 +66,7 @@ void initializeBlockContigue(int i) {
 // Initialisation du disque en mode chaîné
 void initializeDiskChainee() {
     if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
-        printf("Erreur : configuration de disque invalide.\n");
+        printf("Erreur : configuration de disque est  invalide.\n");
         return;
     }
     for (int i = 0; i < MAX_BLOCKS; i++) {
