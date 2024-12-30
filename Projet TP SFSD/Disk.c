@@ -45,7 +45,7 @@ void AfficherDisqueChainee(){
             j=0;
             while(j<BLOCK_SIZE && strlen(disk[i].chainee.enregistrement[j].Data)!=0)
                 j++;
-            printf("\nNom du fichier:  et nombre d'enregistrements: %d", j);
+            printf("\nNom du fichier:  et  le nombre d'enregistrements: %d", j);
         }
     }
 }
