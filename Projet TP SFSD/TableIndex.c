@@ -34,7 +34,7 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index √† √©t√© cr√©e avec succes.");
+  printf("\n la table d'index ‡ ÈtÈ crÈe avec succes.");
 }
 }
 void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
@@ -68,7 +68,7 @@ void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
             }
         }
     }
-    printf("\n la table d'index √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index ‡ ÈtÈ crÈe avec succes.");
 }
 void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -91,7 +91,7 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
  }
 void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -116,27 +116,32 @@ void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
 }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'index en "MS"
     //Lecture des metadonnees
-    int nbBlocs = lireEntete(*F,2);
+    char filename[30];
+    lireNomFichier(*F,filename);
+    int nbBlocs = lireEntete(*F,2), i;
     int nbEnregistrements = lireEntete(*F,3);
-    char nomFichier[30], nomIndex[36] = "Index";
-    lireNomFichier(*F, nomFichier);
-    strcat(nomIndex,nomFichier);
-    tablesIndex = fopen("tablesIndex.bin","ab+");
-    F.TableIndex = fopen(nomIndex,"wb+");
-
+    rechercheTableIndex(F, &i);
+    if(i==0){ //Si le fichier n'existe pas
+        tablesIndex = fopen("tablesIndex.bin","ab+");
+        fwrite(&filename,sizeof(filename),1,tablesIndex);
+    }
+    else{ //Cas de mise a jour
+        tablesIndex = fopen("tablesIndex.bin","rb+");
+        fseek(tablesIndex,i*sizeof(char),SEEK_SET);
+    }
     if(liretypeTri(F)==true){ //Cas d'un fichier non dense
         Index buffer[nbBlocs]; //La taille d'une table d'index non dense correspond au nombre de blocs utilises
         for(int i=0; i<nbBlocs; i++){
             buffer[i].ID = tableindex[i].ID;
             buffer[i].numBloc=tableindex[i].numbloc;
         }
-        fwrite(&buffer, sizeof(buffer),1,F.TableIndex);
+        if(i==0) fwrite(&buffer, sizeof(buffer),1,F.TableIndex);
         fwrite(&buffer, sizeof(buffer),1,tablesIndex);
-    }
+        }
     else{ //Cas d'un fichier dense
         Index buffer[nbEnregistrements];
         int j,k=0;
@@ -144,24 +149,50 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'i
             buffer[i].ID = tableindex[i].ID;
             buffer[i].numBloc=tableindex[i].numbloc;
         }
-        fwrite(&buffer, sizeof(buffer),1,F.TableIndex);
+        if (i==0) fwrite(&buffer, sizeof(buffer),1,F.TableIndex);
         fwrite(&buffer, sizeof(buffer),1,tablesIndex);
     }
     fclose(tablesIndex);
-    fclose(F.TableIndex);
+}
+void rechercheTableIndex(fichier *F, int *i){
+    char filename[30], filename2[30],nomIndex[36];
+    lireNomFichier(*F,filename);
+    strcat(nomIndex,filename);
+    tablesIndex = fopen("tablesIndex.bin","rb+");
+    F.TableIndex = fopen(nomIndex,"rb+");
+    char C;
+    int position;
+    *i=0;
+    Index buffer;
+    while(fread(&C,sizeof(char),1,tablesIndex)){
+        if(C==filename[0]){
+            fseek(tablesIndex,-1*sizeof(char),SEEK_CUR);
+            fread(&filename2,sizeof(filename2),1,tablesIndex);
+            position = ftell(tablesIndex);
+            if(strcmp(filename2,filename)==0){
+                *i = (position + sizeof(filename2)) / sizeof(Index);
+                while(fread(&buffer,sizeof(Index),1,tablesIndex)==1){
+                    fwrite(&buffer,sizeof(Index),1,F->TableIndex);
+                }
+                fclose(tablesIndex);
+                return;
+            }
+        }
+    }
 }
 void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
         rewind(F->TableIndex);
         if(liretypeTri(F) == true){
-            chargementFichierIndexNonDense(F,  tableIndexNonDense[]);   // le fichier est nondense donc il ex√©cute l'autre proc√©dure
+            chargementFichierIndexNonDense(F,  tableIndexNonDense[]);   // le fichier est nondense donc il exÈcute l'autre procÈdure
         }
         else{
             int nbBlocs = lireEntete(F.MDfile,2);
             int nbrEngis = lireEntete(F.MDfile,3);
             Index buffer;
+            int k=0;
             for(int i=0;i<nbBlocs;i++){
                 fread(&buffer,sizeof(Index),1,F.TableIndex);
-                int j=0; int k=0;
+                int j=0;
                 while(j<BLOCK_SIZE && k<nbEngis){
                     tableIndexDense[k].ID=buffer[j].ID;
                     tableIndexDense[k].numbloc=buffer[j].numbloc;
@@ -174,7 +205,7 @@ void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
 void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
     rewind(F->TableIndex);
     if(liretypeTri(F) == false){
-        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il ex√©cute l'autre proc√©dure
+        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il exÈcute l'autre procÈdure
     }
     else{
         int nbrBlocs = lireEntete(F.MDfile,2); //Nombre de blocs
@@ -187,102 +218,157 @@ void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
         }
     }
 }
-}
 void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplacement) {
-    rewind(F->MD.file);
-    int nbEngis= lireEntete(F,3);
-    Index indexEntry;
-    int gauche = 0, droite, milieu;
-    FILE *indexFile = F->TableIndex;
-    rewind(indexFile);
-    droite=nbEngis-1;
-    while(droite<=gauche){
-        milieu=(gauche+droite)/2;
-        
-        // Lire l'entr√©e de l'index au milieu
-        fseek(indexFile, sizeof(int) + milieu * sizeof(Index), SEEK_SET);
-        fread(&indexEntry, sizeof(Index), 1, indexFile);
+    rewind(F->MDfile);
+    int nbEngis = lireEntete(F, 3); //Nb enregistrements
+    int gauche = 0, droite = nbEngis - 1, milieu; //Dichotomie
+    Index tableIndex[];
+    chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
 
-        if (indexEntry.ID == ID) {
-             *numBloc = indexEntry.numbloc;
-             *deplacement = ID % nbEngis; 
-            printf("\nEnregistrement trouv√© , numbloc:%d , d√©placement:%d \n",numBloc,deplacement);
-        }
-        else if (indexEntry.ID < ID) {
-            gauche = milieu + 1;
-        } 
-        else {
-            droite = milieu - 1;
-        }
-    }
+    while (gauche <= droite) {
+        milieu = (gauche + droite) / 2;
 
-          
+        // Lire l'entrÈe de l'index au milieu
 
-    printf("Enregistrement avec ID %d n'existe pas.\n", ID);
-
-}
-    void rechercheEnregistrementNonDense(fichier *F,int ID, int *numbloc, int *d√©placement){
-    Bloc bloc; 
-    rewind(F->MD.file);
-    int nbrBlocs= lireEntete(F,2);
-    
-    Index indexEntry;
-    int gauche = 0, droite, milieu;
-    FILE *indexFile = F->TableIndex;
-    rewind(indexFile);
-    droite=nbrBlocs-1;
-    while(gauche<=droite){
-            milieu=(gauche+droite)/2;
-        
-        // Lire l'entr√©e de l'index au milieu
-        fseek(indexFile, sizeof(int) + milieu * sizeof(Index), SEEK_SET);
-        fread(&indexEntry, sizeof(Index), 1, indexFile);
-
-        if (indexEntry.ID == ID) {
-             *numBloc = indexEntry.numbloc;
-             *deplacement = ID % nbrBlocs; // Calcul du d√©placement dans le bloc
-        }
-        else if (indexEntryID < ID) {
-            gauche = milieu + 1;
-        } 
-        else {
-            droite = milieu - 1;
-        }
-    }
-        
-
-            // Acc√©der au bloc dans le fichier principal selon l'organisation globale 
-        if (lireEnteteGlobal(F)) == Contigue) {  
-           for(int k=0;k<MAX_BLOCKS;k++){
-               for(int j=1;j<BLOCK_SIZE;j++){
-                               if(disk[i].contigue.enregistrement[j].ID == ID){
-                                   printf("\nEnregistrement trouv√© , numbloc:%d , d√©placement:%d \n",k,j);
-                               }
-           
-            }
-           }
-    
-                } 
-             else if (lireEnteteGlobal(F) == Chainee) {
-                // Parcourir les blocs cha√Æn√©s
-                int currentBloc = lireEntete(F,4);
-                
-                while (currentBloc != -1) {
-                for (int i = 1; i < BLOCK_SIZE; i++) {
-                        if ( disk.chainee.enregistrement[i].ID == ID)
-                            {
-                            printf("Enregistrement trouv√© : Bloc %d, D√©placement %d\n", currentBloc, i);
-                        
-                        }
-                     
+        if (tableIndex[milieu].ID == ID) {
+            *numBloc = tableIndex[milieu].numbloc; //Numero du bloc
+            for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
+                if(lireEnteteGlobal(*F)==Chainee){
+                    if(disk[*numBloc].chainee.enregistrement[i].ID==ID){
+                        *deplacement=i;
+                        break;
                     }
-                    currentBloc = bloc.chainee.next; // Passer au bloc suivant
+                }
+                else{
+                    if(disk[*numBloc].contigue.enregistrement[i].ID==ID){
+                        *deplacement=i;
+                        break;
+                    }
                 }
             }
-printf("\nEnregistrement non trouv√©\n");
-           
-        } 
-    
+            printf("\nEnregistrement trouvÈ , numbloc:%d , dÈplacement:%d \n", *numBloc, *deplacement);
+            return;
+        } else if (tableIndex[milieu].ID < ID) {
+            gauche = milieu + 1;
+        } else {
+            droite = milieu - 1;
+        }
+    }
+
+    *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
+    int i=0; *deplacement=-1;
+    if(lireEnteteGlobal(*F)==Chainee){
+        do{
+            while(i<BLOCK_SIZE && disk[*numbloc].chainee.enregistrement[i].ID!=0) //On l'ajoute a la fin
+                i++;
+            if(i<BLOCK_SIZE)
+                *deplacement=i;
+            else
+                *numbloc=disk[*numbloc].chainee.next;
+            if(*numbloc==-1){
+                *numbloc=AllouerBlocChainee();
+                *deplacement=0;
+            }
+        }while(*deplacement==-1);
+    }
+    else{
+        do{
+            while(i<BLOCK_SIZE && disk[*numbloc].contigue.enregistrement[i].ID!=0)
+                i++;
+            if(i<BLOCK_SIZE)
+                *deplacement=i;
+            else
+                (*numbloc)++;
+            if(*numbloc+lireEntete(*F,4)>nbrBlocs){ //Cas ou on depasse la taille du fichier
+                if(checkBlockContigue((*numbloc)+1)==false){ //SI le bloc suivant est libre
+                    *numbloc=AllouerBlocContigue();
+                    *deplacement=0;
+                }
+                else{
+                    *numbloc=-1; *deplacement=-2; //Espace insuffisant
+                }
+            }
+        }while(*deplacement==-1);
+        if(*deplacement==-2) *deplacement=-1;
+    }
+    printf("\nEnregistrement non trouvÈ\n");
+}
+void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *deplacement) {
+    Bloc bloc;
+    rewind(F->MD.file);
+    int nbrBlocs = lireEntete(F, 2); //nbBlocs
+    int gauche = 0, droite = nbrBlocs - 1, milieu; //Dichotomie
+    typeOrganisation type = lireEnteteGlobal(*F); //Chaine ou contigu
+    Index tableIndex[];
+    chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
+
+    while (gauche <= droite) {
+        milieu = (gauche + droite) / 2;
+
+        // Lire l'entrÈe de l'index au milieu
+
+        if (tableIndex[milieu].ID == ID) {
+            *numbloc = tableIndex[milieu].numbloc;
+            for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
+                if(lireEnteteGlobal(*F)==Chainee){
+                    if(disk[*numBloc].chainee.enregistrement[i].ID==ID){
+                        *deplacement=i;
+                        break;
+                    }
+                }
+                else{
+                    if(disk[*numBloc].contigue.enregistrement[i].ID==ID){
+                        *deplacement=i;
+                        break;
+                    }
+                }
+            }
+            printf("\nEnregistrement trouvÈ , numbloc:%d , dÈplacement:%d \n", *numbloc, *deplacement);
+            return;
+        } else if (tableIndex[milieu].ID < ID) {
+            gauche = milieu + 1;
+        } else {
+            droite = milieu - 1;
+        }
+    }
+    *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
+    int i=0; *deplacement=-1;
+    if(lireEnteteGlobal(*F)==Chainee){
+        do{
+            while(i<BLOCK_SIZE && disk[*numbloc].chainee.enregistrement[i].ID<ID)
+                i++;
+            if(i<BLOCK_SIZE)
+                *deplacement=i;
+            else
+                *numbloc=disk[*numbloc].chainee.next;
+            if(*numbloc==-1){
+                *numbloc=AllouerBlocChainee();
+                *deplacement=0;
+            }
+        }while(*deplacement==-1);
+    }
+    else{
+        do{
+            while(i<BLOCK_SIZE && disk[*numbloc].contigue.enregistrement[i].ID<ID)
+                i++;
+            if(i<BLOCK_SIZE)
+                *deplacement=i;
+            else
+                (*numbloc)++;
+            if(*numbloc+lireEntete(*F,4)>nbrBlocs){ //Cas ou on depasse la taille du fichier
+                if(checkBlockContigue((*numbloc)+1)==false){ //SI le bloc suivant est libre
+                    *numbloc=AllouerBlocContigue();
+                    *deplacement=0;
+                }
+                else{
+                    *numbloc=-1; *deplacement=-2; //Espace insuffisant
+                }
+            }
+        }while(*deplacement==-1);
+        if(*deplacement==-2) *deplacement=-1;
+    }
+    printf("\nEnregistrement non trouvÈ\n");
+}
 
 
 

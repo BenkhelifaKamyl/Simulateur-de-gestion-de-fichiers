@@ -202,16 +202,14 @@ void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
     fclose(F.TableIndex);
     fclose(F.MDfile);
 }
-int AllouerBlocChainee(){ //Retourne le premier bloc libre
-    int i=0;
+int AllouerBlocChainee(int i){ //Retourne le premier bloc libre
     while(i<MAX_BLOCKS &&disk[i].chainee.free==false)
         i++;
     if(i<MAX_BLOCKS)
         return i;
     return -1;
 }
-int AllouerBlocContigue(){ //Retourne le premier bloc libre
-    int i=0;
+int AllouerBlocContigue(int i){ //Retourne le premier bloc libre
     while(i<MAX_BLOCKS &&disk[i].contigue.free==false)
         i++;
     if(i<MAX_BLOCKS)
