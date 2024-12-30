@@ -155,7 +155,7 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'i
     fclose(tablesIndex);
 }
 void rechercheTableIndex(fichier *F, int *i){
-    char filename[30], filename2[30],nomIndex[36];
+    char filename[30], filename2[30],nomIndex[36] = "Index";
     lireNomFichier(*F,filename);
     strcat(nomIndex,filename);
     tablesIndex = fopen("tablesIndex.bin","rb+");
@@ -369,6 +369,46 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     }
     printf("\nEnregistrement non trouvé\n");
 }
+void removeIndexTable(fichier *F){
 
+    char filename[30], filename2[30],nomIndex[36] = "Index";
+    lireNomFichier(*F,filename);
+    strcat(nomIndex,filename);
+    char C; int i;
+    bool found=false;
+    Index buffer;
+    rechercheTableIndex(F,&i);
+    fclose(F->TableIndex);
+    remove(nomIndex); //Supprimer physiquement le fichier d'index
+    FILE *temp = fopen("temp.bin","wb+");
+    tablesIndex = fopen("tablesIndex.bin","rb+");
+
+    while(fread(&C,sizeof(char),1,tablesIndex)){ //Lis le fichier caractere par caractere
+        if(C==filename[0]){
+            fseek(tablesIndex,-1*sizeof(char),SEEK_CUR);
+            fread(&filename2,sizeof(filename2),1,tablesIndex);
+            if(strcmp(filename2,filename)!=0){
+                fwrite(&filename2, sizeof(filename2),1,temp);
+            }
+            else{
+                found=true;
+                while(fread(&buffer,sizeof(Index),1,tablesIndex)==1){
+                    //Ignore
+                }
+            }
+        }
+        else{
+            fwrite(&C,sizeof(char),1,temp);
+        }
+    }
+    fclose(temp); fclose(tablesIndex);
+    if(found){
+        remove("tablesIndex.bin");
+        rename("temp.bin", "tablesIndex.bin");
+    }
+    else{
+        printf("\nFichier d'index non trouve");
+    }
+}
 
 

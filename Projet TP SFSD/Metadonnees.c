@@ -301,6 +301,8 @@ void supprimeFichierMetadonnees(fichier *F){
     char filename[30];
     lireNomFichier(*F,filename);
     rechercheNomFichier(F,filename,&i);
+    fclose(F->MDfile);
+    remove(filename);
     Meta = fopen("Meta.bin","rb+");
     MetaDonnee buffer;
     while(fread(&buffer,sizeof(MetaDonnee),1,Meta)==1){
@@ -308,12 +310,8 @@ void supprimeFichierMetadonnees(fichier *F){
             fwrite(&buffer,sizeof(MetaDonnee),1,temp);
     }
     fclose(Meta); fclose(temp);
-    temp = fopen("temp.bin","rb+");
-    Meta = fopen("Meta.bin","wb+");
-    while(fread(&buffer,sizeof(MetaDonnee),1,temp)==1){
-        fwrite(&buffer,sizeof(MetaDonnee),1,Meta);
-    }
-    fclose(Meta); fclose(temp);
+    remove("Meta.bin");
+    rename("temp.bin","Meta.bin");
 }
 
 
