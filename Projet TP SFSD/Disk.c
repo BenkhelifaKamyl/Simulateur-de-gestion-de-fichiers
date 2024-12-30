@@ -815,7 +815,7 @@ void Defragmentationchainee(fichier *F) {
     int freeBlockIndex = AllouerBloc();  // Get the next free block index
 
     if (freeBlockIndex == -1) {
-        printf("Pas de blocs libres disponibles pour la défragmentation.\n");
+        printf("Pas des blocs libres disponibles pour la défragmentation.\n");
         return;
     }
 
