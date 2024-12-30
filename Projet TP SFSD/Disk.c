@@ -501,110 +501,49 @@ Enregistrement donneesEnregistrement(){
 void insertRecord(fichier *F, Enregistrement record){
     bool isSorted = liretypeTri(*F);
     if(lireEnteteGlobal==Chainee)
-        insertRecordchainee(F,record,isSorted);
+        insertRecordchainee(F,record);
     else
-        insertRecordcontigue(F,record,isSorted);
+        insertRecordcontigue(F,record);
 }
 
 // 8. Insert a Record (Sorted and Unsorted)(chainee)
-void insertRecordChainee(fichier *F, Enregistrement record, bool isSorted, int fileID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
+void insertRecordChainee(fichier *F, Enregistrement record) {
 
-    int blocksUsed = 0;
-    int lastBlockAddress = -1;
-    int i = lireEntete(*F,4); //premiere adresse du fichier
+    int numBloc, deplacement, temp,i = lireEntete(*F,4); //premiere adresse du fichier
     int nbBlocks = lireEntete(*F,2);
     int nbEnregistrements = lireEntete(*F,3);
+    rechercheTableIndex(F,&temp);
 
-    if (isSorted) { // Insertion triée
-        while(blocksUsed<nbBlocks){
-
-            for (int j = 0; j < BLOCK_SIZE; j++) { // Vérifier la position d'insertion
-                if (disk[i].chainee.enregistrement[j].ID == 0 || record.ID < disk[i].chainee.enregistrement[j].ID) {
-                    // Décaler les enregistrements pour faire de la place
-                    for (int k = BLOCK_SIZE - 1; k > j; k--) {
-                        memcpy(&disk[i].chainee.enregistrement[k],&disk[i].chainee.enregistrement[k-1],sizeof(Enregistrement))
-                    }
-                    memcpy(&disk[i].chainee.enregistrement[j],&record,sizeof(Enregistrement)); //Inserer l'enregistrement
-                    printf("Record inserted in sorted order in file %d at block %d, position %d.\n", fileID, i, j);
-                    // Mettre à jour la table d'index et les métadonnées
-                    MajTableIndexNonDense(fichier *F, record, 1);
-                    blocksUsed++;
-                    lastBlockAddress = i;
-                    MajEntetenum(F, 2, blocksUsed); // Mise à jour du nombre de blocs
-                    MajEntetenum(F, 3, blocksUsed * BLOCK_SIZE); // Mise à jour du nombre d'enregistrements
-                    return;
-                }
+    if (liretypeTri(*F)) { // Insertion triée
+        rechercheEnregistrementNonDense(F,record.ID,&numBloc, &deplacement);
+        if(numBloc!=-1){ //Si l'insertion est possible
+            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &record, sizeof(Enregistrement));
+            if(deplacement>0){
+                MajEntetenum(F,2,nbBlocks+1);
             }
-            // Si le bloc est plein et qu'il n'y a pas de bloc suivant
-            if (disk[i].chainee.next == -1) {
-                printf("Error: No space left to insert the record in sorted order for file %d.\n", fileID);
-                return;
-            }
+            MajEntetenum(F,3,nbEnregistrements);
+            chargerMetadonnees(*F);
+            //En attente de la fonction insertion en table d'index pour l'inserer dans la table d'index
         }
-        for (int i =firstBlock ; i < MAX_BLOCKS; i++) {
-            if (disk[i].chainee.free) continue; // Sauter les blocs libres
-            for (int j = 0; j < BLOCK_SIZE; j++) { // Vérifier la position d'insertion
-                if (disk[i].chainee.enregistrement[j].ID == 0 || record.ID < disk[i].chainee.enregistrement[j].ID) {
-                    // Décaler les enregistrements pour faire de la place
-                    for (int k = BLOCK_SIZE - 1; k > j; k--) {
-                        disk[i].chainee.enregistrement[k] = disk[i].chainee.enregistrement[k - 1];
-                    }
-                    disk[i].chainee.enregistrement[j] = record; // Insérer l'enregistrement
-                    printf("Record inserted in sorted order in file %d at block %d, position %d.\n", fileID, i, j);
-                    // Mettre à jour la table d'index et les métadonnées
-                    F->indexTable[i] = fileID;
-                    blocksUsed++;
-                    lastBlockAddress = i;
-                    MajEntetenum(F, 2, blocksUsed); // Mise à jour du nombre de blocs
-                    MajEntetenum(F, 3, blocksUsed * BLOCK_SIZE); // Mise à jour du nombre d'enregistrements
-                    return;
-                }
-            }
-            // Si le bloc est plein et qu'il n'y a pas de bloc suivant
-            if (disk[i].chainee.next == -1) {
-                printf("Error: No space left to insert the record in sorted order for file %d.\n", fileID);
-                return;
-            }
-        }
-    } else { // Insertion non triée
-        for (int i = 0; i < MAX_BLOCKS; i++) {
-            if (disk[i].chainee.free) continue; // Sauter les blocs libres
-            for (int j = 0; j < BLOCK_SIZE; j++) {
-                if (disk[i].chainee.enregistrement[j].ID == 0) { // Trouver un emplacement vide
-                    disk[i].chainee.enregistrement[j] = record;
-                    printf("Record inserted in unsorted order in file %d at block %d, position %d.\n", fileID, i, j);
-                    // Mettre à jour la table d'index et les métadonnées
-                    F->indexTable[i] = fileID;
-                    blocksUsed++;
-                    lastBlockAddress = i;
-                    MajEntetenum(F, 2, blocksUsed);
-                    MajEntetenum(F, 3, blocksUsed * BLOCK_SIZE);
-                    return;
-                }
-            }
-            // Vérifier et ajouter un nouveau bloc si nécessaire
-            if (disk[i].chainee.next == -1) {
-                for (int j = 0; j < MAX_BLOCKS; j++) {
-                    if (disk[j].chainee.free) {
-                        disk[j].chainee.free = false;
-                        disk[i].chainee.next = j;
-                        F->indexTable[j] = fileID;
-                        blocksUsed++;
-                        lastBlockAddress = j;
-                        printf("New block %d allocated and linked to block %d for file %d.\n", j, i, fileID);
-                        return;
-                    }
-                }
-                printf("Error: No space left to allocate a new block for file %d.\n", fileID);
-                return;
-            }
+        else{
+            printf("\nEspace insuffisant pour l'insertion.");
         }
     }
-    printf("Error: File %d not found or no space available.\n", fileID);
+    else{
+        rechercheEnregistrementDense(F,record.ID,&numBloc, &deplacement);
+        if(numBloc!=-1){
+            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &record, sizeof(Enregistrement));
+            if(deplacement>0){
+                MajEntetenum(F,2,nbBlocks+1);
+            }
+            MajEntetenum(F,3,nbEnregistrements);
+            chargerMetadonnees(*F);
+            //En attente de la fonction insertion en table d'index pour l'inserer dans la table d'index
+        }
+        else{
+            printf("\nEspace insuffisant pour l'insertion.");
+        }
+    }
 }
 
 
@@ -937,53 +876,26 @@ void deleteFile(fichier *F){
 }
 // Delete a file with chained allocation
 void deleteFilechainee(fichier *F) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {  // Validate file ID
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
+    int firstAdress = lireEntete(*F,4);
+    int nbBlocs = lireEntete(*F,2);
+    int nbEnregistrements = lireEntete(*F,3);
 
-    // Find the first block of the file using chained allocation
-    int currentBlockID = -1;
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (!disk[i].chainee.free && disk[i].chainee.fileID == fileID) {
-            currentBlockID = i;  // Found the first block
-            break;
-        }
-    }
-
-    if (currentBlockID == -1) {  // If no block is found
-        printf("Error: File with ID %d not found.\n", fileID);
-        return;
-    }
-
-    int nbBlocsLibres = 0;  // Counter for free blocks
+    int currentBlockID = firstAdress,nbBlocsLibres = 0;  // Counter for free blocks
 
     // Traverse and free all blocks of the file using the linked list
-    while (currentBlockID != -1) {
-        int nextBlockID = disk[currentBlockID].chainee.nextBlock;  // Store next block ID
+    while (currentBlockID!=-1) {
+        int nextBlockID = disk[currentBlockID].chainee.next;  // Store next block ID
 
         // Clear current block
-        disk[currentBlockID].chainee.free = true;
-        disk[currentBlockID].chainee.fileID = -1;
-        disk[currentBlockID].chainee.nextBlock = -1;
+        initializeBlockChainee(currentBlockID); //Reinitialise le bloc
 
-        for (int j = 0; j < BLOCK_SIZE; j++) {  // Clear records in the block
-            disk[currentBlockID].chainee.enregistrement[j].ID = -1;
-            disk[currentBlockID].chainee.enregistrement[j].Supprime = false;
-            memset(disk[currentBlockID].chainee.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].chainee.enregistrement[j].Data));
-        }
-
-        nbBlocsLibres++;  // Increase count of freed blocks
         currentBlockID = nextBlockID;  // Move to the next block
     }
 
-    // Update metadata
-    MajEntetenum(F, 2, lireEntete(*F, 2) - nbBlocsLibres);  // Update the number of blocks
-    MajEntetenum(F, 3, 0);  // Reset number of records to 0
-    MajEntetenum(F, 4, -1);  // Reset the first block address
-
     // Remove file from the index table
-    removeFromIndexTable(fileID);
+    removeFromIndexTable(*F); // SUpprime la table d'index
+
+    supprimeFichierMetadonnees(F); //Supprime le fichier de metadonnees
 
     printf("File %d deleted successfully.\n", fileID);
 }

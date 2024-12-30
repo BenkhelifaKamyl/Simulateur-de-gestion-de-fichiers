@@ -202,7 +202,8 @@ void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
     fclose(F.TableIndex);
     fclose(F.MDfile);
 }
-int AllouerBlocChainee(int i){ //Retourne le premier bloc libre
+int AllouerBlocChainee(){ //Retourne le premier bloc libre
+    int i=0;
     while(i<MAX_BLOCKS &&disk[i].chainee.free==false)
         i++;
     if(i<MAX_BLOCKS)

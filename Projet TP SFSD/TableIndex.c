@@ -267,9 +267,9 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
                 *numbloc=disk[*numbloc].chainee.next;
             if(*numbloc==-1){
                 *numbloc=AllouerBlocChainee();
-                *deplacement=0;
+                *deplacement=-1;
             }
-        }while(*deplacement==-1);
+        }while(*deplacement==-1 && *numBloc!=-1); //Si numBloc= -1 alors il n'existe pas de bloc libre
     }
     else{
         do{
@@ -281,7 +281,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
                 (*numbloc)++;
             if(*numbloc+lireEntete(*F,4)>nbrBlocs){ //Cas ou on depasse la taille du fichier
                 if(checkBlockContigue((*numbloc)+1)==false){ //SI le bloc suivant est libre
-                    *numbloc=AllouerBlocContigue();
+                    *numbloc=AllouerBlocContigue((*numBloc));
                     *deplacement=0;
                 }
                 else{
@@ -345,7 +345,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
                 *numbloc=AllouerBlocChainee();
                 *deplacement=0;
             }
-        }while(*deplacement==-1);
+        }while(*deplacement==-1 && *numbloc!=-1);
     }
     else{
         do{
@@ -357,7 +357,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
                 (*numbloc)++;
             if(*numbloc+lireEntete(*F,4)>nbrBlocs){ //Cas ou on depasse la taille du fichier
                 if(checkBlockContigue((*numbloc)+1)==false){ //SI le bloc suivant est libre
-                    *numbloc=AllouerBlocContigue();
+                    *numbloc=AllouerBlocContigue((*numbloc));
                     *deplacement=0;
                 }
                 else{
