@@ -151,7 +151,7 @@ void compactDiskContigue() {
             // Libère l'ancien bloc
             disk[i].contigue.free = true;
 
-            // Trouve le prochain bloc libre
+            // Trouver le prochain bloc libre
             for (int j = lastFreeBlock + 1; j < MAX_BLOCKS; j++) {
                 if (disk[j].contigue.free) {
                     lastFreeBlock = j;
