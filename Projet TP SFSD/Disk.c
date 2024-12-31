@@ -611,10 +611,10 @@ void insertRecordChainee(fichier *F, Enregistrement record, bool estTrie) {
 
 // 8. Insert a Record (Sorted and Unsorted)(contiguous)
 
-void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
+    void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
     int nbBlocks = lireEntete(*F, 2);
     int nbEnregistrements = lireEntete(*F, 3);
-    int tailleBloc = sizeof(disk[0].contigu.enregistrement) / sizeof(Enregistrement);
+    int tailleBloc = sizeof(disk[0].contigue.enregistrement) / sizeof(Enregistrement);
     int dernierBloc = nbBlocks - 1;
 
     if (nbBlocks >= MAX_BLOCKS && (nbEnregistrements % tailleBloc == 0)) {
@@ -625,7 +625,7 @@ void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
     if (estTrie) {
         // Recherche de la position d'insertion pour le cas trié
         int numBloc = -1, deplacement = -1;
-        rechercheEnregistrementNonDense(F, record.clé, &numBloc, &deplacement);
+        rechercheEnregistrementNonDense(F, record.ID, &numBloc, &deplacement);
 
         if (numBloc == -1) {
             printf("\nEspace insuffisant pour l'insertion (trié).");
@@ -650,16 +650,16 @@ void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
                 memset(&disk[destBloc], 0, sizeof(Bloc));
             }
 
-            disk[destBloc].contigu.enregistrement[destPos] = disk[srcBloc].contigu.enregistrement[srcPos];
+            disk[destBloc].contigue.enregistrement[destPos] = disk[srcBloc].contigue.enregistrement[srcPos];
         }
 
         // Insérer le nouvel enregistrement
-        disk[numBloc].contigu.enregistrement[deplacement] = record;
+        memcpy(&disk[numBloc].contigue.enregistrement[deplacement], &record,sizeof(Enregistrement));
 
     } else {
         // Cas non trié (dense)
         int numBloc = -1, deplacement = -1;
-        rechercheEnregistrementDense(F, record.clé, &numBloc, &deplacement);
+        rechercheEnregistrementDense(F, record.ID, &numBloc, &deplacement);
 
         if (numBloc == -1) {
             printf("\nEspace insuffisant pour l'insertion (non trié).");
@@ -668,13 +668,13 @@ void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
 
         if (deplacement < tailleBloc) {
             // Insérer dans l'espace libre du bloc courant
-            disk[numBloc].contigu.enregistrement[deplacement] = record;
+            memcpy(&disk[numBloc].contigue.enregistrement[deplacement], &record,sizeof(Enregistrement));
         } else {
             // Ajouter un nouveau bloc si nécessaire
             dernierBloc++;
             nbBlocks++;
             memset(&disk[dernierBloc], 0, sizeof(Bloc));
-            disk[dernierBloc].contigu.enregistrement[0] = record;
+            memcpy(&disk[numBloc].contigue.enregistrement[deplacement], &record,sizeof(Enregistrement));
         }
     }
 
