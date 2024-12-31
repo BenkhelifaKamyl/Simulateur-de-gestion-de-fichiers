@@ -913,32 +913,74 @@ void SuppressionLogique(fichier *F, int recordId) {
 //     return -1;  // Record not found
  }
 
-// 10. Physical Deletion of a Record (Contiguous Disk Structure)
-void deleteRecordPhysicalContiguous(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
-        printf("Error: Invalid file ID %d.\n", fileID);
+
+// 10. Physical Deletion of a Record (Contiguous)
+void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
+    int startBlock = lireEntete(*F, 4); // Get the starting block of the file
+    int recordCount = lireEntete(*F, 3); // Get the total number of records
+
+    if (startBlock == -1) { // Check if the file is initialized
+        printf("Error: File not initialized.\n");
         return;
     }
 
-    // Iterate over blocks to find the record
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (!disk[i].contigue.free) { // Check if the block is in use (not free)
-            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse the records in the block
-                if (disk[i].contigue.enregistrement[j].ID == recordID) { // If the record matches the given ID
-                    // Physically delete the record by resetting its fields
-                    disk[i].contigue.enregistrement[j].ID = -1; // Reset record ID to indicate it's removed
-                    disk[i].contigue.enregistrement[j].Supprime = true; // Set "deleted" flag
-                    memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data)); // Clear data
-                    printf("Record %d in file %d physically deleted.\n", recordID, fileID);
-                    return; // Record found and deleted, exit function
-                }
-            }
+    // Traverse the records in the contiguous blocks
+    for (int i = 0; i < recordCount; i++) {
+        int blockIndex = startBlock + (i / BLOCK_SIZE);
+        int recordIndex = i % BLOCK_SIZE;
+
+        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Match found
+            // Physically delete the record by resetting its fields
+            disk[blockIndex].contigue.enregistrement[recordIndex].ID = 0; // Reset record ID
+            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Reset "deleted" flag
+            memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data)); // Clear data
+            printf("Record %d physically deleted.\n", recordID);
+
+            // Update metadata
+            int recordCount = lireEntete(*F, 3);
+            MajEntetenum(F, 3, recordCount - 1); // Decrement the record count
+
+            return; // Exit after deletion
         }
     }
 
-    // If the record is not found in any block
-    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+    // If the record is not found
+    printf("Error: Record %d not found.\n", recordID);
 }
+
+
+
+
+
+
+
+
+// 10. Physical Deletion of a Record (Contiguous Disk Structure)
+// void deleteRecordPhysicalContiguous(int fileID, int recordID) {
+//     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
+//         printf("Error: Invalid file ID %d.\n", fileID);
+//         return;
+//     }
+
+//     // Iterate over blocks to find the record
+//     for (int i = 0; i < MAX_BLOCKS; i++) {
+//         if (!disk[i].contigue.free) { // Check if the block is in use (not free)
+//             for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse the records in the block
+//                 if (disk[i].contigue.enregistrement[j].ID == recordID) { // If the record matches the given ID
+//                     // Physically delete the record by resetting its fields
+//                     disk[i].contigue.enregistrement[j].ID = -1; // Reset record ID to indicate it's removed
+//                     disk[i].contigue.enregistrement[j].Supprime = true; // Set "deleted" flag
+//                     memset(disk[i].contigue.enregistrement[j].Data, 0, sizeof(disk[i].contigue.enregistrement[j].Data)); // Clear data
+//                     printf("Record %d in file %d physically deleted.\n", recordID, fileID);
+//                     return; // Record found and deleted, exit function
+//                 }
+//             }
+//         }
+//     }
+
+//     // If the record is not found in any block
+//     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+// }
 
 void Defragmentation(fichier *F){
     if(lireEnteteGlobal(F)==Chainee)
