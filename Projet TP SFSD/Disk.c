@@ -89,33 +89,50 @@ void initializeDiskContigue() {
 
 // Compactage du Disque avec Buffer (chainee)
 void compactDiskChainee() {
-    Bloc buffer; // Temporary buffer for moving blocks
-    int lastFreeBlock = -1;
-    fichier F;
+    Bloc buffer;              // Temporary buffer for moving blocks
+    int lastFreeBlock = -1;   // Track the last free block
+    fichier F;                // Metadata structure for file
 
+    // Iterate through all blocks in the disk
     for (int i = 0; i < MAX_BLOCKS; i++) {
+        // Check if the current block is free
         if (disk[i].chainee.free) {
-            if (lastFreeBlock == -1) lastFreeBlock = i;  // Find the first free block
-        } else if (lastFreeBlock != -1) {
-            chargerFichierMetadonnees(i, &F);  // Load the metadata of the associated file
+            // If this is the first free block found, record its index
+            if (lastFreeBlock == -1) {
+                lastFreeBlock = i;
+            }
+        } else if (lastFreeBlock != -1) {  // A free block exists earlier in the disk
+            // Load the metadata of the associated file
+            chargerFichierMetadonnees(i, &F);
 
-            // Use the temporary buffer
+            // Move the current block to the last free block
             memcpy(&buffer, &disk[i], sizeof(Bloc));
-
-            // Move the block to the free space
             memcpy(&disk[lastFreeBlock], &buffer, sizeof(Bloc));
 
             // Update the file metadata if necessary
             if (F->MDfile != NULL) {
-                MajEntetenum(&F, 4, lastFreeBlock); // Update the first address
-                chargerMetadonnees(F);             // Reload metadata
+                // Update the first block reference in metadata
+                if (lireEntete(F, 4) == i) {
+                    MajEntetenum(&F, 4, lastFreeBlock);
+                }
+
+                // Update references to the moved block in the chain
+                for (int j = 0; j < MAX_BLOCKS; j++) {
+                    if (disk[j].chainee.next == i) {
+                        disk[j].chainee.next = lastFreeBlock;
+                        break;
+                    }
+                }
+
+                // Reload metadata after updates
+                chargerMetadonnees(F);
             }
 
-            // Free the old block
+            // Mark the old block as free and reset its pointers
             disk[i].chainee.free = true;
             disk[i].chainee.next = -1;
 
-            // Find the next free block
+            // Find the next free block starting from the current free block index
             for (int j = lastFreeBlock + 1; j < MAX_BLOCKS; j++) {
                 if (disk[j].chainee.free) {
                     lastFreeBlock = j;
@@ -124,34 +141,47 @@ void compactDiskChainee() {
             }
         }
     }
+
+    // Print completion message
     printf("Disk compacted in chained mode.\n");
 }
 
 // Compactage du Disque avec Buffer (contigue)
 void compactDiskContigue() {
-    Bloc buffer; // Buffer temporaire pour le déplacement
-    int lastFreeBlock = -1;
-    fichier F;
+    Bloc buffer;              // Buffer temporaire pour le déplacement
+    int lastFreeBlock = -1;   // Suivi du dernier bloc libre
+    fichier F;                // Structure pour les métadonnées du fichier
 
+    // Parcourir tous les blocs du disque
     for (int i = 0; i < MAX_BLOCKS; i++) {
+        // Vérifier si le bloc actuel est libre
         if (disk[i].contigue.free) {
-            if (lastFreeBlock == -1) lastFreeBlock = i;  // Trouve le premier bloc libre
-        }
-        else if (lastFreeBlock != -1) {
-            chargerFichierMetadonnees(i, &F); //Si il s'agit de la premiere
-            // Utilise le buffer temporaire
-            memcpy(&buffer, &disk[i], sizeof(Bloc));
+            if (lastFreeBlock == -1) {
+                lastFreeBlock = i;  // Enregistrer le premier bloc libre
+            }
+        } else if (lastFreeBlock != -1) { // Un espace libre existe avant ce bloc
+            // Charger les métadonnées associées au fichier
+            chargerFichierMetadonnees(i, &F);
 
-            // Déplace le bloc dans l'espace libre
+            // Déplacer le bloc courant dans le premier espace libre
+            memcpy(&buffer, &disk[i], sizeof(Bloc));
             memcpy(&disk[lastFreeBlock], &buffer, sizeof(Bloc));
-            if(F->MDfile!=NULL){
-                MajEntetenum(&F,4,lastFreeBlock);
+
+            // Mettre à jour les métadonnées
+            if (F->MDfile != NULL) {
+                // Vérifier si le bloc déplacé est le premier bloc du fichier
+                if (lireEntete(F, 4) == i) {
+                    MajEntetenum(&F, 4, lastFreeBlock);  // Mise à jour de l'adresse du premier bloc
+                }
+
+                // Synchroniser les métadonnées après mise à jour
                 chargerMetadonnees(F);
             }
-            // Libère l'ancien bloc
+
+            // Marquer l'ancien bloc comme libre
             disk[i].contigue.free = true;
 
-            // Trouve le prochain bloc libre
+            // Trouver le prochain bloc libre à partir de la position actuelle
             for (int j = lastFreeBlock + 1; j < MAX_BLOCKS; j++) {
                 if (disk[j].contigue.free) {
                     lastFreeBlock = j;
@@ -161,7 +191,8 @@ void compactDiskContigue() {
         }
     }
 
-    printf("Disque compacte en mode contigu.\n");
+    // Afficher un message une fois la compaction terminée
+    printf("Disque compacté en mode contigu.\n");
 }
 
 // 4 Vider la Mémoire Secondaire (chainee)
