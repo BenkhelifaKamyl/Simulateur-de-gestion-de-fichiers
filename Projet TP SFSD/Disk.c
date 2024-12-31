@@ -651,21 +651,25 @@ void deleteRecordLogicalchainee(int fileID, int recordID) {
 
 // 9. Logical Deletion of a Record(contiguous)
 void deleteRecordLogicalcontigue(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_FILES) { // Check if the file ID is valid
+    if (fileID < 0 || fileID >= MAX_FILES) { // Validate file ID
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
     }
 
-    // Retrieve file metadata
-    FileMetadata *file = &F->files[fileID];
-    if (file->startBlock == -1) {
+    fichier F;
+    rechercheFichierMeta(fileID, &F); // Load file metadata based on fileID
+
+    int startBlock = lireEntete(F, 4); // Get the starting block of the file
+    int recordCount = lireEntete(F, 3); // Get the total number of records in the file
+
+    if (startBlock == -1) { // Check if the file is initialized
         printf("Error: File %d not initialized.\n", fileID);
         return;
     }
 
-    // Traverse the records in the contiguous blocks allocated to the file
-    for (int i = 0; i < file->recordCount; i++) {
-        int blockIndex = file->startBlock + (i / BLOCK_SIZE);
+    // Traverse the records in the contiguous blocks
+    for (int i = 0; i < recordCount; i++) {
+        int blockIndex = startBlock + (i / BLOCK_SIZE);
         int recordIndex = i % BLOCK_SIZE;
 
         if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // If the record matches the given ID
@@ -678,6 +682,8 @@ void deleteRecordLogicalcontigue(int fileID, int recordID) {
     // If the record is not found in the allocated blocks
     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
+
+
 
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(int fileID, int recordID) {
