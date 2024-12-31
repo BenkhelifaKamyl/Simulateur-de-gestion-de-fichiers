@@ -837,52 +837,64 @@ void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
 
 
 
-
-
-
-
-
-
-void Defragmentation(fichier *F){
-    if(lireEnteteGlobal(F)==Chainee)
-        Defragmentationchainee(F);
-    else
-        DefragmentationContigue(F);
-}
 // Function to perform defragmentation(chained): update metadata, table index, and compact blocks
 void Defragmentationchainee(fichier *F) {
     printf("Défragmentation en cours...\n");
 
     int nbBlocs = lireEntete(*F, 2);  // Read the number of blocks from metadata
     int nbEnregistrements = lireEntete(*F, 3);  // Read the number of records from metadata
-    int freeBlockIndex = AllouerBloc();  // Get the next free block index
+
+    int currentBlockID = lireEntete(*F, 4); // Get the first block of the file
+    int freeBlockIndex = -1;
+
+    // Identify the first free block
+    for (int i = 0; i < MAX_BLOCKS; i++) {
+        if (disk[i].chainee.free) {
+            freeBlockIndex = i;
+            break;
+        }
+    }
 
     if (freeBlockIndex == -1) {
         printf("Pas de blocs libres disponibles pour la défragmentation.\n");
         return;
     }
 
-    // Iterate through blocks to compact data
-    for (int i = 0; i < nbBlocs; i++) {
-        Bloc Buffer;
-        LireBloc(F, i, &Buffer);
-
-        if (Buffer.chainee.free ) {
-            // If the block is deleted or empty, move the next record to this free block
-            // If there's a record to move, update the block and metadata
-            if (freeBlockIndex != i) {
-                LireBloc(F, freeBlockIndex, &Buffer);
-                EcrireBloc(F, i, Buffer);  // Move the record to the free block
-                freeBlockIndex = AllouerBloc();  // Get the next free block
+    while (currentBlockID != -1) {
+        if (disk[currentBlockID].chainee.free) {
+            // If the block is free, find the next used block
+            int nextUsedBlockID = currentBlockID;
+            while (nextUsedBlockID != -1 && disk[nextUsedBlockID].chainee.free) {
+                nextUsedBlockID = disk[nextUsedBlockID].chainee.next;
             }
+
+            if (nextUsedBlockID == -1) break; // No more used blocks
+
+            // Move the used block to the free space
+            memcpy(&disk[freeBlockIndex], &disk[nextUsedBlockID], sizeof(Bloc));
+            initializeBlockChainee(nextUsedBlockID); // Free the old block
+
+            // Update the linked list pointers
+            for (int i = 0; i < MAX_BLOCKS; i++) {
+                if (disk[i].chainee.next == nextUsedBlockID) {
+                    disk[i].chainee.next = freeBlockIndex;
+                    break;
+                }
+            }
+
+            freeBlockIndex = nextUsedBlockID;
         }
+        currentBlockID = disk[currentBlockID].chainee.next;
     }
 
-    // Update metadata after defragmentation (number of blocks, records, etc.)
-    MajEntetenum(F, 2, nbBlocs);  // Update number of blocks after defragmentation
-    MajEntetenum(F, 3, nbEnregistrements);  // Update number of records
+    // Update metadata
+    MajEntetenum(F, 2, nbBlocs); // Update number of blocks
+    MajEntetenum(F, 3, nbEnregistrements); // Update number of records
     printf("Défragmentation terminée.\n");
 }
+
+
+
 
 // Function to perform defragmentation(contiguous) : update metadata, table index, and compact blocks
 void DefragmentationContigue(fichier *F) {
@@ -890,33 +902,44 @@ void DefragmentationContigue(fichier *F) {
 
     int nbBlocs = lireEntete(*F, 2);  // Read the number of blocks from metadata
     int nbEnregistrements = lireEntete(*F, 3);  // Read the number of records from metadata
-    int freeBlockIndex = AllouerBloc();  // Get the next free block index
+
+    int firstBlock = lireEntete(*F, 4); // Get the first block of the file
+    if (firstBlock == -1) {
+        printf("No blocks allocated to the file.\n");
+        return;
+    }
+
+    int freeBlockIndex = -1;
+
+    // Identify the first free block
+    for (int i = firstBlock; i < firstBlock + nbBlocs; i++) {
+        if (disk[i].contigue.free) {
+            freeBlockIndex = i;
+            break;
+        }
+    }
 
     if (freeBlockIndex == -1) {
         printf("No free blocks available for defragmentation.\n");
         return;
     }
 
-    // Iterate through blocks to compact data
-    for (int i = 0; i < nbBlocs; i++) {
-        Bloc Buffer;
-        LireBloc(F, i, &Buffer);
+    for (int i = freeBlockIndex + 1; i < firstBlock + nbBlocs; i++) {
+        if (!disk[i].contigue.free) {
+            // Move the block content to the free space
+            memcpy(&disk[freeBlockIndex], &disk[i], sizeof(Bloc));
+            initializeBlockContigue(i); // Free the old block
 
-        if (Buffer.contigue.free) {  // Check if the block is free or marked as deleted
-            // If the block is deleted or empty, move the next record to this free block
-            if (freeBlockIndex != i) {
-                LireBloc(F, freeBlockIndex, &Buffer);
-                EcrireBloc(F, i, Buffer);  // Move the record to the free block
-                freeBlockIndex = AllouerBloc();  // Get the next free block
-            }
+            freeBlockIndex++;
         }
     }
 
-    // Update metadata after defragmentation (number of blocks, records, etc.)
-    MajEntetenum(F, 2, nbBlocs);  // Update the number of blocks after defragmentation
-    MajEntetenum(F, 3, nbEnregistrements);  // Update the number of records
+    // Update metadata
+    MajEntetenum(F, 2, nbBlocs); // Update the number of blocks
+    MajEntetenum(F, 3, nbEnregistrements); // Update the number of records
     printf("Defragmentation complete.\n");
 }
+//////////////////////////////////////////////////////////////////////////////////////////
 
 void deleteFile(fichier *F){
     if(lireEnteteGlobal(*F)==Chainee)
