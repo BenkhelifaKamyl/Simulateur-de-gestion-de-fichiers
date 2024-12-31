@@ -692,23 +692,31 @@ void insertRecordChainee(fichier *F, Enregistrement record, bool estTrie) {
     printf("\nEnregistrement inséré avec succès.");
 }
 
+
 // 9. Logical Deletion of a Record(chainee)
-void deleteRecordLogicalchainee(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
-        printf("Error: Invalid file ID %d.\n", fileID);
+void deleteRecordLogicalchainee(fichier *F, int recordID) {
+    int currentBlockID = lireEntete(*F, 4); // Get the starting block of the file
+    if (currentBlockID == -1) { // Check if the file is initialized
+        printf("Error: File not initialized.\n");
         return;
     }
-    int currentBlockID = fileID; // Assume fileID is the starting block ID
+
+    bool isSorted = liretypeTri(*F); // Determine if the file is sorted
     while (currentBlockID != -1) { // Traverse linked blocks
         if (!disk[currentBlockID].chainee.free) { // Check if the block is in use
             for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse records in the block
                 if (disk[currentBlockID].chainee.enregistrement[j].ID == recordID) {
                     if (disk[currentBlockID].chainee.enregistrement[j].Supprime) {
-                        printf("Record %d in file %d is already logically deleted.\n", recordID, fileID);
+                        printf("Record %d is already logically deleted.\n", recordID);
                         return;
                     }
                     disk[currentBlockID].chainee.enregistrement[j].Supprime = true; // Mark as deleted
-                    printf("Record %d in file %d marked as logically deleted.\n", recordID, fileID);
+                    printf("Record %d marked as logically deleted.\n", recordID);
+                    return;
+                }
+                if (isSorted && disk[currentBlockID].chainee.enregistrement[j].ID > recordID) {
+                    // Exit early if sorted and passed potential record location
+                    printf("Error: Record %d not found in sorted file.\n", recordID);
                     return;
                 }
             }
@@ -716,26 +724,18 @@ void deleteRecordLogicalchainee(int fileID, int recordID) {
         currentBlockID = disk[currentBlockID].chainee.next; // Move to the next block
     }
 
-    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+    printf("Error: Record %d not found.\n", recordID);
 }
 
 
-
-// 9. Logical Deletion of a Record(contiguous)
-void deleteRecordLogicalcontigue(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_FILES) { // Validate file ID
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
-
-    fichier F;
-    rechercheFichierMeta(fileID, &F); // Load file metadata based on fileID
-
-    int startBlock = lireEntete(F, 4); // Get the starting block of the file
-    int recordCount = lireEntete(F, 3); // Get the total number of records in the file
+// 9. Logical Deletion of a Record(contigue)
+void deleteRecordLogicalcontigue(fichier *F, int recordID) {
+    int startBlock = lireEntete(*F, 4); // Get the starting block of the file
+    int recordCount = lireEntete(*F, 3); // Get the total number of records
+    bool isSorted = liretypeTri(*F); // Determine if the file is sorted
 
     if (startBlock == -1) { // Check if the file is initialized
-        printf("Error: File %d not initialized.\n", fileID);
+        printf("Error: File not initialized.\n");
         return;
     }
 
@@ -744,17 +744,25 @@ void deleteRecordLogicalcontigue(int fileID, int recordID) {
         int blockIndex = startBlock + (i / BLOCK_SIZE);
         int recordIndex = i % BLOCK_SIZE;
 
-        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // If the record matches the given ID
-            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = true; // Mark the record as logically deleted
-            printf("Record %d in file %d marked as logically deleted.\n", recordID, fileID);
-            return; // Return after marking the record as deleted
+        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Match found
+            if (disk[blockIndex].contigue.enregistrement[recordIndex].Supprime) {
+                printf("Record %d is already logically deleted.\n", recordID);
+                return;
+            }
+            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = true; // Mark as deleted
+            printf("Record %d marked as logically deleted.\n", recordID);
+            return;
+        }
+        if (isSorted && disk[blockIndex].contigue.enregistrement[recordIndex].ID > recordID) {
+            // Early exit for sorted files if passed the potential location
+            printf("Error: Record %d not found in sorted file.\n", recordID);
+            return;
         }
     }
 
-    // If the record is not found in the allocated blocks
-    printf("Error: Record %d not found in file %d.\n", recordID, fileID);
+    // If the record is not found
+    printf("Error: Record %d not found.\n", recordID);
 }
-
 
 
 // 10. Physical Deletion of a Record(chained)
