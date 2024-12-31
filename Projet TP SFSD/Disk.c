@@ -738,13 +738,12 @@ void deleteRecordLogicalcontigue(fichier *F, int recordID) {
         printf("Error: File not initialized.\n");
         return;
     }
-
-    // Traverse the records in the contiguous blocks
-    for (int i = 0; i < recordCount; i++) {
+    
+    for (int i = 0; i < recordCount; i++) {// Traverse the records in the contiguous blocks
         int blockIndex = startBlock + (i / BLOCK_SIZE);
         int recordIndex = i % BLOCK_SIZE;
 
-        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Match found
+        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { 
             if (disk[blockIndex].contigue.enregistrement[recordIndex].Supprime) {
                 printf("Record %d is already logically deleted.\n", recordID);
                 return;
@@ -759,12 +758,11 @@ void deleteRecordLogicalcontigue(fichier *F, int recordID) {
             return;
         }
     }
-
     // If the record is not found
     printf("Error: Record %d not found.\n", recordID);
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(int fileID, int recordID) {
     if (fileID < 0 || fileID >= MAX_BLOCKS) { // Validate file ID
