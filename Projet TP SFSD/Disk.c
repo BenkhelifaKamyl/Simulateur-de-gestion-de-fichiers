@@ -538,118 +538,159 @@ void insertRecord(fichier *F, Enregistrement record){
 }
 
 // 8. Insert a Record (Sorted and Unsorted)(chainee)
-void insertRecordChainee(fichier *F, Enregistrement record) {
+void insertRecordChainee(fichier *F, Enregistrement record, bool estTrie) {
+    int nbBlocks = lireEntete(*F, 2);
+    int nbEnregistrements = lireEntete(*F, 3);
+    int tailleBloc = sizeof(disk[0].chainee.enregistrement) / sizeof(Enregistrement);
+    int numBloc = -1, deplacement = -1;
 
-    int numBloc, deplacement, temp,i = lireEntete(*F,4); //premiere adresse du fichier
-    int nbBlocks = lireEntete(*F,2);
-    int nbEnregistrements = lireEntete(*F,3);
-    rechercheTableIndex(F,&temp);
+    if (estTrie) {
+        // Cas trié : rechercher la position d'insertion
+        rechercheEnregistrementNonDense(F, record.ID, &numBloc, &deplacement);
+    } else {
+        // Cas non trié : rechercher un espace libre
+        rechercheEnregistrementDense(F, record.ID, &numBloc, &deplacement);
+    }
 
-    if (liretypeTri(*F)) { // Insertion triée
-        rechercheEnregistrementNonDense(F,record.ID,&numBloc, &deplacement);
-        if(numBloc!=-1){ //Si l'insertion est possible
-            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &record, sizeof(Enregistrement));
-            if(deplacement>0){
-                MajEntetenum(F,2,nbBlocks+1);
+    // Vérifier si un espace est disponible
+    if (numBloc == -1) {
+        printf("\nEspace insuffisant pour l'insertion.\n");
+        return;
+    }
+
+    // Décalage pour faire de la place à l'enregistrement
+    while (deplacement >= tailleBloc) {
+        // Si le bloc est plein, passer au suivant
+        if (disk[numBloc].chainee.next == -1) {
+            // Créer un nouveau bloc si nécessaire
+            if (nbBlocks >= MAX_BLOCKS) {
+                printf("\nEspace insuffisant pour ajouter un nouveau bloc.\n");
+                return;
             }
-            MajEntetenum(F,3,nbEnregistrements);
-            chargerMetadonnees(*F);
-            //En attente de la fonction insertion en table d'index pour l'inserer dans la table d'index
-        }
-        else{
-            printf("\nEspace insuffisant pour l'insertion.");
+            int newBlock = nbBlocks++;
+            disk[newBlock].chainee.free = false;
+            disk[newBlock].chainee.next = -1; // Fin de la chaîne
+            disk[numBloc].chainee.next = newBlock; // Lier au précédent
+            numBloc = newBlock;
+            deplacement = 0; // Commencer au début du nouveau bloc
+        } else {
+            numBloc = disk[numBloc].chainee.next;
+            deplacement -= tailleBloc; // Continuer au prochain bloc
         }
     }
-    else{
-        rechercheEnregistrementDense(F,record.ID,&numBloc, &deplacement);
-        if(numBloc!=-1){
-            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &record, sizeof(Enregistrement));
-            if(deplacement>0){
-                MajEntetenum(F,2,nbBlocks+1);
-            }
-            MajEntetenum(F,3,nbEnregistrements);
-            chargerMetadonnees(*F);
-            //En attente de la fonction insertion en table d'index pour l'inserer dans la table d'index
+
+    // Décaler les enregistrements existants pour libérer l'espace
+    int currentBlock = numBloc, currentPosition = deplacement;
+    while (currentBlock != -1) {
+        for (int i = tailleBloc - 1; i > currentPosition; i--) {
+            disk[currentBlock].chainee.enregistrement[i] = disk[currentBlock].chainee.enregistrement[i - 1];
         }
-        else{
-            printf("\nEspace insuffisant pour l'insertion.");
+
+        // Passer au bloc suivant pour continuer le décalage, si nécessaire
+        if (disk[currentBlock].chainee.next != -1) {
+            disk[disk[currentBlock].chainee.next].chainee.enregistrement[0] = disk[currentBlock].chainee.enregistrement[tailleBloc - 1];
         }
+        currentPosition = 0;
+        currentBlock = disk[currentBlock].chainee.next;
     }
+
+    // Insérer l'enregistrement dans la position libérée
+    disk[numBloc].chainee.enregistrement[deplacement] = record;
+
+    // Mise à jour des métadonnées
+    nbEnregistrements++;
+    MajEntetenum(F, 2, nbBlocks);
+    MajEntetenum(F, 3, nbEnregistrements);
+
+    // Mettre à jour la table d'index
+    updateIndexTable(F, record);
+
+    chargerMetadonnees(*F);
+    printf("\nEnregistrement inséré avec succès.\n");
 }
-
 
 // 8. Insert a Record (Sorted and Unsorted)(contiguous)
-void insertRecordcontigue(fichier *F, Enregistrement record, bool isSorted) {
-    if (fileID < 0 || fileID >= MAX_FILES) {
-        printf("Error: Invalid file ID %d.\n", fileID);
+
+void insertRecordContigu(fichier *F, Enregistrement record, bool estTrie) {
+    int nbBlocks = lireEntete(*F, 2);
+    int nbEnregistrements = lireEntete(*F, 3);
+    int tailleBloc = sizeof(disk[0].contigu.enregistrement) / sizeof(Enregistrement);
+    int dernierBloc = nbBlocks - 1;
+
+    if (nbBlocks >= MAX_BLOCKS && (nbEnregistrements % tailleBloc == 0)) {
+        printf("\nEspace insuffisant pour l'insertion.");
         return;
     }
 
-    // Retrieve file metadata
-    FileMetadata *file = &F->files[fileID];
-    if (file->startBlock == -1) {
-        printf("Error: File %d not initialized.\n", fileID);
-        return;
-    }
+    if (estTrie) {
+        // Recherche de la position d'insertion pour le cas trié
+        int numBloc = -1, deplacement = -1;
+        rechercheEnregistrementNonDense(F, record.clé, &numBloc, &deplacement);
 
-    // Check if there is enough space in the contiguous allocation
-    int totalBlocks = file->blockCount;
-    int totalRecords = totalBlocks * BLOCK_SIZE;
+        if (numBloc == -1) {
+            printf("\nEspace insuffisant pour l'insertion (trié).");
+            return;
+        }
 
-    if (file->recordCount >= totalRecords) {
-        printf("Error: No space left to insert the record in file %d.\n", fileID);
-        return;
-    }
+        // Décalage pour faire de la place
+        for (int i = nbEnregistrements; i > (numBloc * tailleBloc + deplacement); i--) {
+            int srcBloc = (i - 1) / tailleBloc;
+            int srcPos = (i - 1) % tailleBloc;
+            int destBloc = i / tailleBloc;
+            int destPos = i % tailleBloc;
 
-    // Find the position to insert the record
-    int insertPos = file->recordCount;
-    int blockIndex = file->startBlock + (insertPos / BLOCK_SIZE);
-    int recordIndex = insertPos % BLOCK_SIZE;
-
-    if (isSorted) {
-        // Insert in sorted order
-        bool inserted = false;
-        for (int i = 0; i < file->recordCount; i++) {
-            int currentBlockIndex = file->startBlock + (i / BLOCK_SIZE);
-            int currentRecordIndex = i % BLOCK_SIZE;
-
-            if (disk[currentBlockIndex].contigue.enregistrement[currentRecordIndex].ID > record.ID) {
-                // Shift records to the right to make space
-                for (int j = file->recordCount; j > i; j--) {
-                    int fromBlockIndex = file->startBlock + ((j - 1) / BLOCK_SIZE);
-                    int fromRecordIndex = (j - 1) % BLOCK_SIZE;
-
-                    int toBlockIndex = file->startBlock + (j / BLOCK_SIZE);
-                    int toRecordIndex = j % BLOCK_SIZE;
-
-                    disk[toBlockIndex].contigue.enregistrement[toRecordIndex] = disk[fromBlockIndex].contigue.enregistrement[fromRecordIndex];
-                }
-
-                // Insert the new record
-                disk[currentBlockIndex].contigue.enregistrement[currentRecordIndex] = record;
-                inserted = true;
-                break;
+            if (destBloc >= MAX_BLOCKS) {
+                printf("\nEspace insuffisant pendant le décalage.");
+                return;
             }
+
+            // Ajouter un nouveau bloc si nécessaire
+            if (destBloc >= nbBlocks) {
+                nbBlocks++;
+                memset(&disk[destBloc], 0, sizeof(Bloc));
+            }
+
+            disk[destBloc].contigu.enregistrement[destPos] = disk[srcBloc].contigu.enregistrement[srcPos];
         }
 
-        if (!inserted) {
-            // Insert at the end if no larger record was found
-            disk[blockIndex].contigue.enregistrement[recordIndex] = record;
-        }
+        // Insérer le nouvel enregistrement
+        disk[numBloc].contigu.enregistrement[deplacement] = record;
+
     } else {
-        // Insert without sorting (unsorted order)
-        disk[blockIndex].contigue.enregistrement[recordIndex] = record;
+        // Cas non trié (dense)
+        int numBloc = -1, deplacement = -1;
+        rechercheEnregistrementDense(F, record.clé, &numBloc, &deplacement);
+
+        if (numBloc == -1) {
+            printf("\nEspace insuffisant pour l'insertion (non trié).");
+            return;
+        }
+
+        if (deplacement < tailleBloc) {
+            // Insérer dans l'espace libre du bloc courant
+            disk[numBloc].contigu.enregistrement[deplacement] = record;
+        } else {
+            // Ajouter un nouveau bloc si nécessaire
+            dernierBloc++;
+            nbBlocks++;
+            memset(&disk[dernierBloc], 0, sizeof(Bloc));
+            disk[dernierBloc].contigu.enregistrement[0] = record;
+        }
     }
 
-    // Update file metadata
-    file->recordCount++;
-    MajEntetenum(F, 2, file->blockCount);          // Update block count metadata
-    MajEntetenum(F, 3, file->recordCount);        // Update record count metadata
+    // Mise à jour des métadonnées
+    nbEnregistrements++;
+    MajEntetenum(F, 2, nbBlocks);
+    MajEntetenum(F, 3, nbEnregistrements);
 
-    printf("Record inserted in file %d at block %d, position %d.\n", fileID, blockIndex, recordIndex);
+    // Mise à jour de la table d'index
+    updateIndexTable(F, record);
+
+    // Charger les métadonnées mises à jour
+    chargerMetadonnees(*F);
+
+    printf("\nEnregistrement inséré avec succès.");
 }
-
-
 
 // 9. Logical Deletion of a Record(chainee)
 void deleteRecordLogicalchainee(int fileID, int recordID) {
