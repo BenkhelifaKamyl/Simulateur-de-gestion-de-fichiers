@@ -34,7 +34,7 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []){
                 k++;
         }
   }
-  printf("\n la table d'index ‡ ÈtÈ crÈe avec succes.");
+  printf("\n la table d'index √† √©t√© cr√©e avec succes.");
 }
 }
 void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
@@ -68,7 +68,7 @@ void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
             }
         }
     }
-    printf("\n la table d'index ‡ ÈtÈ crÈe avec succes.");
+    printf("\n la table d'index √† √©t√© cr√©e avec succes.");
 }
 void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -91,7 +91,7 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
+    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
  }
 void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -116,7 +116,7 @@ void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
+    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
 }
 void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'index en "MS"
     //Lecture des metadonnees
@@ -183,7 +183,7 @@ void rechercheTableIndex(fichier *F, int *i){
 void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
         rewind(F->TableIndex);
         if(liretypeTri(F) == true){
-            chargementFichierIndexNonDense(F,  tableIndexNonDense[]);   // le fichier est nondense donc il exÈcute l'autre procÈdure
+            chargementFichierIndexNonDense(F,  tableIndexNonDense[]);   // le fichier est nondense donc il ex√©cute l'autre proc√©dure
         }
         else{
             int nbBlocs = lireEntete(F.MDfile,2);
@@ -205,7 +205,7 @@ void chargementFichierIndexDense(fichier  *F, Index tableIndexDense []){
 void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
     rewind(F->TableIndex);
     if(liretypeTri(F) == false){
-        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il exÈcute l'autre procÈdure
+        chargementFichierIndexDense(F, tableIndexDense[]); // le fichier est dense donc il ex√©cute l'autre proc√©dure
     }
     else{
         int nbrBlocs = lireEntete(F.MDfile,2); //Nombre de blocs
@@ -228,7 +228,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entrÈe de l'index au milieu
+        // Lire l'entr√©e de l'index au milieu
 
         if (tableIndex[milieu].ID == ID) {
             *numBloc = tableIndex[milieu].numbloc; //Numero du bloc
@@ -246,7 +246,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
                     }
                 }
             }
-            printf("\nEnregistrement trouvÈ , numbloc:%d , dÈplacement:%d \n", *numBloc, *deplacement);
+            printf("\nEnregistrement trouv√© , numbloc:%d , d√©placement:%d \n", *numBloc, *deplacement);
             return;
         } else if (tableIndex[milieu].ID < ID) {
             gauche = milieu + 1;
@@ -291,7 +291,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
         }while(*deplacement==-1);
         if(*deplacement==-2) *deplacement=-1;
     }
-    printf("\nEnregistrement non trouvÈ\n");
+    printf("\nEnregistrement non trouv√©\n");
 }
 void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *deplacement) {
     Bloc bloc;
@@ -305,7 +305,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entrÈe de l'index au milieu
+        // Lire l'entr√©e de l'index au milieu
 
         if (tableIndex[milieu].ID == ID) {
             *numbloc = tableIndex[milieu].numbloc;
@@ -323,7 +323,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
                     }
                 }
             }
-            printf("\nEnregistrement trouvÈ , numbloc:%d , dÈplacement:%d \n", *numbloc, *deplacement);
+            printf("\nEnregistrement trouv√© , numbloc:%d , d√©placement:%d \n", *numbloc, *deplacement);
             return;
         } else if (tableIndex[milieu].ID < ID) {
             gauche = milieu + 1;
@@ -367,7 +367,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
         }while(*deplacement==-1);
         if(*deplacement==-2) *deplacement=-1;
     }
-    printf("\nEnregistrement non trouvÈ\n");
+    printf("\nEnregistrement non trouv√©\n");
 }
 void removeIndexTable(fichier *F){
 
@@ -412,3 +412,84 @@ void removeIndexTable(fichier *F){
 }
 
 
+     
+void MajTableIndexDense(fichier *F, int mode,int ID, int numbloc){
+    int nbEngis=lireEntete(F,3);
+    int i,d√©placement,j;
+    FILE *f=F.TableIndex;
+    rewind(f);
+    Index tableIndex[];
+    chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
+    if(mode<1 && mode>3){
+        printf("\nOperation invalide\n");
+    }
+    
+    if(mode == 1){ // cas de suppression
+        rechercheEnregistrementDense(F,ID,&j,&d√©placement);
+        i=0;
+        while(j< MAX_BLOCKS && i<nbEngis){
+            memcpy(&tableIndex[i],&tableIndex[i+1],sizeof(Index));
+            i++;
+        }
+    }
+   else if(mode == 2){ // cas d'insertion 
+            i=0;
+    while(ID>tableIndex[i].ID){
+        i++;
+      int  k=nbEngis;
+        while(k>i){
+            memcpy(&tableIndex[k],&tableIndex[k-1],sizeof(Index));
+            k--;
+        }
+        memcpy(&tableIndex[i],&index,sizeof(Index));
+    }
+        
+    }
+    else if(mode == 3){  // cas de changement d'adresse 
+            rechercheEnregistrementDense(&F,ID,&j,&d√©placement);
+    tableIndex[j].numbloc=numbloc;
+    }
+    
+        
+    }
+    
+
+void MajTableIndexNonDense(fichier *f,int ID,int numbloc,int mode){
+int nbrBlocs=lireEntete(F,2);
+    int i,d√©placement,j;
+    FILE *f=F.TableIndex;
+    rewind(f);
+    Index tableIndex[];
+    chargementFichierIndexNonDense(F,tableIndex); //Charger le fichier d'index en MC
+if(mode<1 && mode>3){
+    printf("\nOperation invalide\n");
+}
+
+ if(mode==1){ // cas de suppression 
+    rechercheEnregistrementNonDense(&f,ID,&j,&d√©placement);
+     i=0;
+        while(j< MAX_BLOCKS ){
+            memcpy(&tableIndex[j],&tableIndex[j+1],sizeof(Index));
+            i++;
+        }
+    
+    
+ }
+ else if (mode==2){ //cas d'insertion
+   i=0;
+    while(ID>tableIndex[i].ID){
+            i++;
+      int k=nbrBlocs;
+    while(k>i){
+    memcpy(&tableIndex[k],&tableIndex[k-1],sizeof(Index));
+      k--;
+    }
+      
+    }
+    
+ }
+ else if (mode==3){
+    rechercheEnregistrementDense(&F,ID,&j,&d√©placement);
+    tableIndex[j].numbloc=numbloc;
+ }
+}
