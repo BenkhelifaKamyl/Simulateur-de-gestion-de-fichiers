@@ -255,7 +255,8 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
         }
     }
 
-    *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
+    if(gauche>milieu){
+        *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
     int i=0; *deplacement=-1;
     if(lireEnteteGlobal(*F)==Chainee){
         do{
@@ -292,6 +293,8 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
         if(*deplacement==-2) *deplacement=-1;
     }
     printf("\nEnregistrement non trouvé\n");
+    }
+
 }
 void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *deplacement) {
     Bloc bloc;
@@ -307,17 +310,17 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
 
         // Lire l'entrée de l'index au milieu
 
-        if (tableIndex[milieu].ID == ID) {
+        if (tableIndex[milieu].id == ID) {
             *numbloc = tableIndex[milieu].numbloc;
             for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
                 if(lireEnteteGlobal(*F)==Chainee){
-                    if(disk[*numBloc].chainee.enregistrement[i].ID==ID){
+                    if(disk[*numBloc].chainee.enregistrement[i].id==ID){
                         *deplacement=i;
                         break;
                     }
                 }
                 else{
-                    if(disk[*numBloc].contigue.enregistrement[i].ID==ID){
+                    if(disk[*numBloc].contigue.enregistrement[i].id==ID){
                         *deplacement=i;
                         break;
                     }
@@ -325,50 +328,30 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
             }
             printf("\nEnregistrement trouvé , numbloc:%d , déplacement:%d \n", *numbloc, *deplacement);
             return;
-        } else if (tableIndex[milieu].ID < ID) {
+        } else if (tableIndex[milieu].id< ID) {
             gauche = milieu + 1;
         } else {
             droite = milieu - 1;
         }
     }
-    *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
-    int i=0; *deplacement=-1;
-    if(lireEnteteGlobal(*F)==Chainee){
-        do{
-            while(i<BLOCK_SIZE && disk[*numbloc].chainee.enregistrement[i].ID<ID)
+    if(gauche>droite){
+        *numbloc=tableIndex[gauche].numBloc; //Dans le cas ou l'enregistrement n'a pas ete trouve, on retourne l'endroit dans lequel il devrait se trouver
+        int i=0;
+        if(lireEnteteGlobal(*F)==Chainee){
+            while(disk[*numbloc].chainee.enregistrement[i]<ID)
                 i++;
-            if(i<BLOCK_SIZE)
-                *deplacement=i;
-            else
-                *numbloc=disk[*numbloc].chainee.next;
-            if(*numbloc==-1){
-                *numbloc=AllouerBlocChainee();
-                *deplacement=0;
-            }
-        }while(*deplacement==-1 && *numbloc!=-1);
-    }
-    else{
-        do{
-            while(i<BLOCK_SIZE && disk[*numbloc].contigue.enregistrement[i].ID<ID)
+            *deplacement=i;
+        }
+        else{
+            while(disk[*numbloc].contigue.enregistrement[i]<ID)
                 i++;
-            if(i<BLOCK_SIZE)
-                *deplacement=i;
-            else
-                (*numbloc)++;
-            if(*numbloc+lireEntete(*F,4)>nbrBlocs){ //Cas ou on depasse la taille du fichier
-                if(checkBlockContigue((*numbloc)+1)==false){ //SI le bloc suivant est libre
-                    *numbloc=AllouerBlocContigue((*numbloc));
-                    *deplacement=0;
-                }
-                else{
-                    *numbloc=-1; *deplacement=-2; //Espace insuffisant
-                }
-            }
-        }while(*deplacement==-1);
-        if(*deplacement==-2) *deplacement=-1;
+            *deplacement=i;
+        }
+        printf("\nEnregistrement non trouvé\n");
     }
-    printf("\nEnregistrement non trouvé\n");
+
 }
+
 void removeIndexTable(fichier *F){
 
     char filename[30], filename2[30],nomIndex[36] = "Index";
