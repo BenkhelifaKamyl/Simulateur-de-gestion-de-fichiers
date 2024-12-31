@@ -687,32 +687,50 @@ void deleteRecordLogicalcontigue(int fileID, int recordID) {
 
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(int fileID, int recordID) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Check if the file ID is valid
+    if (fileID < 0 || fileID >= MAX_BLOCKS) { // Validate file ID
         printf("Error: Invalid file ID %d.\n", fileID);
         return;
     }
 
-    for (int i = 0; i < MAX_BLOCKS; i++) { // Find the block that contains the record
-        if (!disk[i].chainee.free) { // Check if the block is in use (not free)
-            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse the records in the block
-                if (disk[i].chainee.enregistrement[j].ID == recordID) { // If the record matches the given ID
+    fichier F;
+    rechercheFichierMeta(fileID, &F); // Load metadata for the file
+    MetaDonnee meta;
+    rewind(F.MDfile);
+    fread(&meta, sizeof(MetaDonnee), 1, F.MDfile);
+
+    int currentBlockID = meta.premiereAdresse; // Get the starting block address
+
+    if (currentBlockID == -1) { // Check if the file is initialized
+        printf("Error: File %d not initialized.\n", fileID);
+        return;
+    }
+
+    while (currentBlockID != -1) { // Traverse linked blocks
+        if (!disk[currentBlockID].chainee.free) { // Check if the block is in use
+            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse records in the block
+                if (disk[currentBlockID].chainee.enregistrement[j].ID == recordID) { // If the record matches the given ID
                     // Physically delete the record by resetting its fields
-                    disk[i].chainee.enregistrement[j].ID = -1; // Reset record ID to indicate it's removed
-                    disk[i].chainee.enregistrement[j].Supprime = false; // Reset "deleted" flag
-                    memset(disk[i].chainee.enregistrement[j].Data, 0, sizeof(disk[i].chainee.enregistrement[j].Data)); // Clear data
+                    disk[currentBlockID].chainee.enregistrement[j].ID = 0; // Reset record ID to indicate it's removed
+                    disk[currentBlockID].chainee.enregistrement[j].Supprime = false; // Reset "deleted" flag
+                    memset(disk[currentBlockID].chainee.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].chainee.enregistrement[j].Data)); // Clear data
                     printf("Record %d in file %d physically deleted.\n", recordID, fileID);
 
-                    // Optionally, update the next pointer or check for block compaction if needed
-                    // For now, we just return since it's a simple deletion
-                    return;
+                    // Update metadata
+                    meta.nbEnregistrements--; // Decrement the record count
+                    rewind(F.MDfile);
+                    fwrite(&meta, sizeof(MetaDonnee), 1, F.MDfile);
+
+                    return; // Exit after deletion
                 }
             }
         }
+        currentBlockID = disk[currentBlockID].chainee.next; // Move to the next block
     }
 
     // If the record is not found in any block
     printf("Error: Record %d not found in file %d.\n", recordID, fileID);
 }
+
 
 // // Function to perform logical deletion (marking a record as deleted)
 void SuppressionLogique(fichier *F, int recordId) {
