@@ -818,7 +818,8 @@ void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
             // Physically delete the record by resetting its fields
             disk[blockIndex].contigue.enregistrement[recordIndex].ID = 0; // Reset record ID
             disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Reset "deleted" flag
-            memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data)); // Clear data
+             // Clear data
+            memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data));
             printf("Record %d physically deleted.\n", recordID);
 
             // Update metadata
