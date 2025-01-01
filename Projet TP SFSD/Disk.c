@@ -467,7 +467,7 @@ void ChargerFichierChainee(fichier *F) {
 }
 
 
-//6.//6.fonction charger fichier (contigue)
+//6.fonction charger fichier (contigue)
 void ChargerFichierContigue(fichier *F) {
     int nbBlocs = lireEntete(*F, 2);  // Get the number of blocks required for the file
     int startBlock = -1;  // Address of the first contiguous block
