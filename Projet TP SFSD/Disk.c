@@ -206,7 +206,7 @@ void clearDiskContigue() {
     printf("Disk cleared.\n");
 }
 
-//5Vérification d'un Bloc(chainee)
+//5.Vérification d'un Bloc(chainee)
 bool checkBlock(int blockID) { // retourne vrai si il est rempli et faux si il est libre ou n'existe pas
     if (blockID >= 0 && blockID < MAX_BLOCKS) {
         return !disk[blockID].chainee.free;
@@ -222,7 +222,7 @@ bool checkBlockContigue(int blockID) {
 
 
 
-//5.Fill a File (Sorted or Unsorted) Using a Buffer (chainee)
+//6.Fill a File (Sorted or Unsorted) Using a Buffer (chainee)
 void fillFileChainee(bool isSorted, fichier *F) {
     const int BUFFER_SIZE = BLOCK_SIZE;
     Enregistrement buffer[BUFFER_SIZE];
@@ -322,7 +322,7 @@ void fillFileChainee(bool isSorted, fichier *F) {
 
 
 
-//5. Fill a File (Sorted or Unsorted) Using a Buffer (contigue)
+//6. Fill a File (Sorted or Unsorted) Using a Buffer (contigue)
 void fillFileContigue(bool isSorted, fichier *F) {
     const int BUFFER_SIZE = BLOCK_SIZE;
     Enregistrement buffer[BUFFER_SIZE];  // Declare buffer
@@ -402,7 +402,7 @@ void fillFileContigue(bool isSorted, fichier *F) {
 
 
 
-//6.fonction charger fichier (chainee)
+//7.fonction charger fichier (chainee)
 void ChargerFichierChainee(fichier *F) {
     int nbBlocs = lireEntete(*F, 2);  // Get the number of blocks required for the file
     int allocatedBlocks = 0;
@@ -467,7 +467,7 @@ void ChargerFichierChainee(fichier *F) {
 }
 
 
-//6.fonction charger fichier (contigue)
+//7.fonction charger fichier (contigue)
 void ChargerFichierContigue(fichier *F) {
     int nbBlocs = lireEntete(*F, 2);  // Get the number of blocks required for the file
     int startBlock = -1;  // Address of the first contiguous block
