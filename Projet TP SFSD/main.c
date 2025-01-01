@@ -25,6 +25,8 @@ void Menu(){
             initializeDiskChainee();
         else
             initializeDiskContigue();
+        initializeMetaFiles(c1);
+        initializeIndexFiles();
 
     do{
         printf("\nChoisissez ce que vous voulez faire:\n 1)Creer un fichier, 2)Afficher la memoire secondaire, \n3) Afficher les metadonnees des fichiers, 4) Rechercher un enregistrement, \n5) Inserer un enregistrement, 6) Supprimer un enregistrement, \n7) Defragmenter un fichier, 8) Supprimer un fichier, \n9) Renommer un fichier, 10) Compactage de la memoire secondaire, \n11) Vider la memoire secondaire, 12) Quitter le programme.\n");
@@ -101,12 +103,7 @@ void Menu(){
             deleteFile(&F);
             break;
         case 9: //Renommer un fichier
-            printf("\nDonnez le nom du fichier que vous voulez renommer: ");
-            scanf("%s", filename);
-            rechercheNomFichier(&F,filename,&i);
-            printf("\nDonnez le nouveau nom du fichier: ");
-            scanf("%s", filename);
-            MajEntetenom(&F, filename);
+            renommerFichier(&F);
             break;
         case 10: //Compactage
             if(c1==1)

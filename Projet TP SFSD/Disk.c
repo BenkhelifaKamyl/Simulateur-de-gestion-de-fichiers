@@ -41,7 +41,7 @@ void AfficherDisqueChainee(){
     fichier F;
     for(int i=0; i<MAX_BLOCKS; i++){
         if(checkBlock(i)==false)
-                printf("\nBloc libre.");
+                printf("\nBloc libre."); //Si le bloc est libre, le marquer comme llibre
         else{
             memcpy(&buffer, &disk[i],sizeof(Bloc));
             j=0;
@@ -59,13 +59,13 @@ void AfficherDisqueChainee(){
 void initializeBlockChainee(int i) {
     disk[i].chainee.free = true;
     disk[i].chainee.next = -1;
-    memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE);
+   memset(disk[i].chainee.enregistrement, 0, BLOCK_SIZE * sizeof(disk[i].chainee.enregistrement[0])); //boucle for et c tout!!!
 }
 
 // Initialisation d'un bloc pour l'organisation contiguë
 void initializeBlockContigue(int i) {
     disk[i].contigue.free = true;
-    memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE);
+    memset(disk[i].contigue.enregistrement, 0, BLOCK_SIZE * sizeof(disk[i].contigue.enregistrement[0]));
 }
 
 // Initialisation du disque en mode chaîné
@@ -77,7 +77,7 @@ void initializeDiskChainee() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         initializeBlockChainee(i);
     }
-    printf("Disque initialisé avec %d blocs en mode chaîné.\n", MAX_BLOCKS);
+    printf("Disque initialise avec %d blocs en mode chainé.\n", MAX_BLOCKS);
 }
 
 // Initialisation du disque en mode contiguë
@@ -89,7 +89,7 @@ void initializeDiskContigue() {
     for (int i = 0; i < MAX_BLOCKS; i++) {
         initializeBlockContigue(i);
     }
-    printf("Disque initialisé avec %d blocs en mode contiguë.\n", MAX_BLOCKS);
+    printf("Disque initialise avec %d blocs en mode contigue.\n", MAX_BLOCKS);
 }
 
 void compactDiskChainee() {
@@ -380,19 +380,14 @@ void fillFileContigue(bool isSorted, fichier *F) {
             lastBlockAddress = i; // Update last block address
         }
     }
-
-    // Update metadata
-    MajEntetenum(F, 3, recordsFilled); // Update number of records
-    MajEntetenum(F, 2, blocksUsed); // Update number of blocks used
-    MajEntetenum(F, 4, firstBlockAddress); // Update first block address
-
     // Create and save the index table
-    Index tableIndex[100];
+    Index tableIndex[200];
     if (liretypeTri(*F)) { // Sorted case
         creationTableIndexNonDenseContigue(*F, tableIndex);
     } else { // Unsorted case
         creationTableIndexDenseContigue(*F, tableIndex);
     }
+    printf("\nTest krkr\n");
     sauvegardeTableIndex(F, tableIndex);
     printf("File filled in contiguous mode with %d records. Sorted: %s\n", recordsFilled, isSorted ? "Yes" : "No");
 }
@@ -501,7 +496,7 @@ void ChargerFichierContigue(fichier *F) {
         MajEntetenum(F, 4, startBlock);  // Update with the address of the first block
         MajEntetenum(F, 2, nbBlocs);    // Update the number of blocks
         chargerMetadonnees(*F);         // Load the file's metadata
-        printf("File loaded with %d contiguous blocks starting from block %d.\n", nbBlocs, startBlock);
+        printf("\nFile loaded with %d contiguous blocks starting from block %d.\n", nbBlocs, startBlock);
     }
 
     // Step 3: Check if the disk is full
@@ -523,12 +518,11 @@ Enregistrement donneesEnregistrement(){
     printf("\nDonnez les donnees de l'enregistrement: ");
     scanf("%s",E.Data);
     printf("\nDonnez l'ID de l'enregistrement: ");
-    scanf("%d",E.ID);
+    scanf("%d",&E.ID);
     return E;
 }
 void insertRecord(fichier *F, Enregistrement record){
-    bool isSorted = liretypeTri(*F);
-    if(lireEnteteGlobal==Chainee)
+    if(lireEnteteGlobal(*F)==Chainee)
         insertRecordChainee(F,record,liretypeTri(*F));
     else
         insertRecordContigue(F,record, liretypeTri(*F));
@@ -694,7 +688,6 @@ void insertRecordContigue(fichier *F, Enregistrement record, bool estTrie) {
     printf("\nEnregistrement inséré avec succès.");
 }
 
-
 // 9. Logical Deletion of a Record(chainee)
 void deleteRecordLogicalchainee(fichier *F, int recordID) {
     int currentBlockID = lireEntete(*F, 4); // Get the starting block of the file
@@ -728,7 +721,6 @@ void deleteRecordLogicalchainee(fichier *F, int recordID) {
 
     printf("Error: Record %d not found.\n", recordID);
 }
-
 
 // 9. Logical Deletion of a Record(contigue)
 void deleteRecordLogicalcontigue(fichier *F, int recordID) {
@@ -798,8 +790,6 @@ void deleteRecordPhysicalchaine(fichier *F, int recordID) {
     printf("Error: Record %d not found.\n", recordID);
 }
 
-
-
 // 10. Physical Deletion of a Record (Contiguous)
 void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
     int startBlock = lireEntete(*F, 4); // Get the starting block of the file
@@ -834,7 +824,6 @@ void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
     // If the record is not found
     printf("Error: Record %d not found.\n", recordID);
 }
-
 
 // Function to perform defragmentation(chained): update metadata, table index, and compact blocks
 void Defragmentationchainee(fichier *F) {

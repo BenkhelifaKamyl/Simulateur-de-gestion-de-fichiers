@@ -7,19 +7,19 @@
 #include "TextColor.h"
 #include "Metadonnees.h"
 #include "Disk.h"
+#define MAX_INDEX_ENTRIES 100
 typedef struct{
     int id;
     int numBloc;
 } Index; //Verifier si cette structure est correcte pour les 2 cas dense et non dense, faire si necessaire une autre structure
 
 
-FILE *tablesIndex; //Fichier contenant tous les fichiers d'index
+ //Fichier contenant tous les fichiers d'index
 //Les parametres des fonctions n'ont pas encore été attribuées
-
-//Mise a jour de l'etat des blocs apres chaque mise a jour
-void TableAllocation();
+Index tablesIndex[MAX_FILES][MAX_INDEX_ENTRIES];
 
 //Creation de la table d'index
+void initializeIndexFiles();
 void creationTableIndexDenseContigue(fichier F, Index densetableIndex []);
 void creationTableIndexDenseChainee(fichier F, Index densetableIndex []);
 void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []);
@@ -35,7 +35,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numBloc, int *depl
 //Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
 void MajTableIndexDense(fichier *F, int mode,int ID, int numbloc); //mode 1: insertion, mode 2: suppression
 void MajTableIndexNonDense(fichier *F, int mode,int ID, int numbloc); //Ne pas oublier de charger le fichier en MS
-void removeIndexTable(fichier *F); //Supprime le fichier d'index de la MS
 
+void removeIndexTable(fichier *F);
 
 #endif // TABLEINDEX_H_INCLUDED
