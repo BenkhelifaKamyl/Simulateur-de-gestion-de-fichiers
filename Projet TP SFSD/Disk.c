@@ -967,7 +967,7 @@ void deleteFilechainee(fichier *F) {
 
     supprimeFichierMetadonnees(F); //Supprime le fichier de metadonnees
 
-    printf("File %d deleted successfully.\n", fileID);
+    printf("File  deleted successfully.\n");
 }
 
 // Delete a file with contiguous allocation
@@ -990,7 +990,7 @@ void deleteFileContigue(fichier *F) {
 
     supprimeFichierMetadonnees(F); //Supprime le fichier de metadonnees
 
-    printf("File %d deleted successfully.\n", fileID);
+    printf("File deleted successfully.\n");
 }
 
 void LireBloc(fichier *F, int i, Bloc *Buffer){
