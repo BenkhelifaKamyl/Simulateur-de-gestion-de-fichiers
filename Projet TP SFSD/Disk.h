@@ -45,11 +45,11 @@ void clearDiskContigue();
 bool checkBlock(int blockID); // cas chaine
 bool checkBlockContigue(int blockId); //cas contigu
 //Remplissage
-void fillFileChainee(int fileID, bool isSorted, fichier *F);
-void fillFileContigue(int fileID, bool isSorted, fichier *F);
+void fillFileChainee( bool isSorted, fichier *F);
+void fillFileContigue( bool isSorted, fichier *F);
 //Chargement
-void ChargerFichierChainee(int fileID, fichier *F);
-void ChargerFichierContigue(int fileID, fichier *F);
+void ChargerFichierChainee(fichier *F);
+void ChargerFichierContigue(fichier *F);
 //Remplissage Enregistrement
 Enregistrement donneesEnregistrement();
 //Insertion

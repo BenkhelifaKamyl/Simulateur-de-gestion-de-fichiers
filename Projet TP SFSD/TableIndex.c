@@ -16,10 +16,8 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []){
     int premiereAdresse = lireEntete(F,4);
     int nbEnregistrements = lireEntete(F,3);
     for(int i=premiereAdresse; i<=premiereAdresse+nbBlocs; i++){
-        rewind(F.MDfile);
         if(checkBlockContigue(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
-            fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
             for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
                 X.id=buffer.contigue.enregistrement[j].ID;
                 X.numBloc= i; //Position du bloc pas de l'enregistrement
@@ -48,10 +46,8 @@ void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
     int i=premiereAdresse;
 
     while(i!=-1){
-        rewind(F.MDfile);
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
-            fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
             for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
                 X.id=buffer.chainee.enregistrement[j].ID;
                 X.numBloc= i; //Position du bloc pas de l'enregistrement
@@ -258,7 +254,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
             else
                 *numBloc=disk[*numBloc].chainee.next;
             if(*numBloc==-1){
-                *numBloc=AllouerBlocChainee();
+                *numBloc=AllouerBlocChainee(0);
                 *deplacement=-1;
             }
         }while(*deplacement==-1 && *numBloc!=-1); //Si numBloc= -1 alors il n'existe pas de bloc libre

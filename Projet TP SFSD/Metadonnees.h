@@ -31,7 +31,7 @@ void MajeEntetetri(fichier *F, int nc); //1 pour triee et 2 pour non triee
 void AfficherEntete(); //Affiche les fichiers de metadonnees
 void OuvrirFichier(fichier *F, char mode, int choix); //Cas 2 contigu ou 1 chainee
 void fermerFichier(fichier F);
-int AllouerBlocChainee();
+int AllouerBlocChainee(int i);
 int AllouerBlocContigue(int i); //Alloue un bloc a partir de l'indice i
 void chargerMetadonnees(fichier F); //Charge le fichier de metadonnees en "MS"
 void chargerFichierMetadonnees(int premiereAdresse, fichier *F); //Charge le fichier de metadonnees selon la premiere adresse du fichier

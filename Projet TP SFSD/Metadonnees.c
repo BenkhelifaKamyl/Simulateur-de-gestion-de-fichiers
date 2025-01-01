@@ -14,7 +14,7 @@ MetaDonnee creationFichier(int choix){ //Saisie des informations du fichier
     scanf("%s",MD.name);
     printf("\nDonnez le nombre d'enregistrements du fichier: ");
     scanf("%d",&MD.nbEnregistrements);
-    printf("\nDonnez le type d'organisation globale: 1) Chainee 2) Contigue");
+    MD.nbBlocs = (MD.nbEnregistrements + BLOCK_SIZE - 1) / BLOCK_SIZE; //Calcule le nbre de blocs utilises
     if(choix==1)
         MD.globalOrg = Chainee;
     else
@@ -25,22 +25,25 @@ MetaDonnee creationFichier(int choix){ //Saisie des informations du fichier
         if (orgInterne != 1 && orgInterne != 2)
             printf("Entrée invalide. Veuillez entrer 1 pour Triee ou 2 pour Non triee.\n");
     } while(orgInterne!=2 && orgInterne!=1);
-    if(orgInterne==1)
+    if(orgInterne==1){
         MD.interneOrg = triee;
-    else
+    }
+    else{
         MD.interneOrg = nonTriee;
-        MD.premiereAdresse = -1;
+    }
+    MD.premiereAdresse = -1;
     return MD;
 }
 void creationFichierMetadonnees(fichier *F, int choix){ //Permet de creer le fichier et de le charger en "MS"
     MetaDonnee buffer;
     buffer = creationFichier(choix); //Recupere les infos du fichier a inserer
+    printf("\nTest\n");
     F->MDfile = fopen(buffer.name, "wb+");
     fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
     if(choix==1) //Verifier si on peut creer le fichier
-        ChargerFichierChainee(7,F);
+        ChargerFichierChainee(F);
     else
-        ChargerFichierContigue(7,F);
+        ChargerFichierContigue(F);
 }
 void lireNomFichier(fichier F, char nomFichier[30]){ //Lire le nom du fichier
     rewind(F.MDfile);
@@ -175,9 +178,9 @@ void OuvrirFichier(fichier *F, char mode, int choix){ //Ouvre le fichier, "w" po
         creationFichierMetadonnees(F, choix); //Cree et charge le fichier de metadonnees en "MS"
         if(F->MDfile!=NULL && lireEntete(*F,4)!=-1){ //Remplis le fichier sur le disk selon les modes d'organisation
             if(lireEnteteGlobal(*F)==Chainee)
-                fillFileChainee(-1, liretypeTri(*F), F);
+                fillFileChainee(liretypeTri(*F), F);
             else
-                fillFileContigue(-1, liretypeTri(*F),F);
+                fillFileContigue(liretypeTri(*F),F);
         }
         //Chargement fichier index se fait soit dans le fillFile soit ici, en attente
         fermerFichier(*F);
@@ -196,8 +199,7 @@ void fermerFichier(fichier F){ //Ferme les fichiers d'index et de metadonnees
     fclose(F.TableIndex);
     fclose(F.MDfile);
 }
-int AllouerBlocChainee(){ //Retourne le premier bloc libre
-    int i=0;
+int AllouerBlocChainee(int i){ //Retourne le premier bloc libre
     while(i<MAX_BLOCKS &&disk[i].chainee.free==false)
         i++;
     if(i<MAX_BLOCKS)
@@ -216,15 +218,20 @@ void chargerMetadonnees(fichier F){ //Charge le fichier de metadonnees dans la "
     fichier G;
     int i;
     lireNomFichier(F,filename);
-    rechercheNomFichier(&G,filename,&i); //Verifie si le fichier existe deja ou pas dans la "MS"
+    if(Meta!=NULL){
+        rechercheNomFichier(&G,filename,&i); //Verifie si le fichier existe deja ou pas dans la "MS"
+        Meta = fopen("Meta.bin","rb+");
+    }
+    else{
+        Meta = fopen("Meta.bin","wb+");
+    }
     rewind(F.MDfile);
-    Meta = fopen("Meta.bin","rb+");
     if(Meta==NULL){
-        printf("\nImpossible d'ouvrir le fichier.");
+        perror("\nImpossible d'ouvrir le fichier Meta dans chargerMetaDonnees.");
         return;
     }
     if(F.MDfile==NULL){
-        printf("\nLe fichier metaDonnees n'est pas ouvert.");
+        printf("\nLe fichier metaDonnees n'est pas ouvert dans la fct chargerMetadonnees.");
         fclose(Meta);
         return;
     }
@@ -237,11 +244,16 @@ void chargerMetadonnees(fichier F){ //Charge le fichier de metadonnees dans la "
 }
 void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le fichier de metadonnees cherché selon la premiere adresse d'un fichier
     Meta = fopen("Meta.bin","rb+");
+    if(Meta==NULL){
+        printf("\nImpossible d'ouvrir le fichier dans la fct chargerFichierMetadonnees.");
+        return;
+    }
     MetaDonnee buffer;
-    rewind(F->MDfile);
+
     bool check=false;
     while(fread(&buffer, sizeof(MetaDonnee),1,Meta)==1){
         if(buffer.premiereAdresse==premiereAdresse){
+            F->MDfile=fopen(buffer.name,"wb+");
             fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
             check=true;
             break;
@@ -268,7 +280,7 @@ void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metad
         }
     }
     if(trouve==false)
-        printf("\nLe fichier de metadonnees n'a pas ete trouve.");
+        printf("\nLe fichier de metadonnees n'a pas ete trouve dans recherchefichiermeta.");
     fclose(Meta);
 }
 void rechercheNomFichier(fichier *F, char filename[30], int *i){
@@ -284,7 +296,7 @@ void rechercheNomFichier(fichier *F, char filename[30], int *i){
         (*i)++;
     }
     if(trouve==false){
-        printf("\nLe fichier de metadonnees n'a pas ete trouve.");
+        printf("\nLe fichier de metadonnees n'a pas ete trouve dans recherchenomficher.");
         F->MDfile=NULL;
     }
     fclose(Meta);
