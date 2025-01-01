@@ -402,49 +402,53 @@ void fillFileContigue(bool isSorted, fichier *F) {
 
 
 
-//6.fonction charger fichier 
-void ChargerFichierChainee(int fileID, fichier *F) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
-
-    int nbBlocs = lireEntete(*F, 2);  // Get the block count for the file
+//6.fonction charger fichier (chainee)
+void ChargerFichierChainee(fichier *F) {
+    int nbBlocs = lireEntete(*F, 2);  // Get the number of blocks required for the file
     int allocatedBlocks = 0;
     int firstBlockAddress = -1;
     int lastBlockAddress = -1;
-    int choix,i=0;
+    int choix;
 
-    // Step 1: Find free blocks and link them in a chain
-    while(allocatedBlocks < nbBlocs){
-        if(lastBlockAddress==-1)
-            lastBlockAddress= AllouerBlocChainee(0);
-        else
-            lastBlockAddress = AllouerBlocChainee(lastBlockAddress);
-        if(lastBlockAddress!=-1){
+    // Step 1: Allocate free blocks and link them in a chain
+    while (allocatedBlocks < nbBlocs) {
+        if (lastBlockAddress == -1) {
+            lastBlockAddress = AllouerBlocChainee();  // Get the first free block
+        } else {
+            int nextBlock = AllouerBlocChainee();  // Allocate the next block
+            if (nextBlock != -1) {
+                disk[lastBlockAddress].chainee.next = nextBlock;  // Link the blocks
+                lastBlockAddress = nextBlock;
+            }
+        }
+
+        if (lastBlockAddress != -1) {
             if (firstBlockAddress == -1) {
-                firstBlockAddress = i;  // Set the first block
+                firstBlockAddress = lastBlockAddress;  // Set the first block
             }
             allocatedBlocks++;
+        } else {
+            break;  // Stop if no more blocks are available
         }
     }
 
-    // Step 2: If not enough blocks, ask user for compaction
+    // Step 2: Handle insufficient blocks
     if (allocatedBlocks < nbBlocs) {
-        printf("Error: Not enough free blocks for file %d.\n", fileID);
+        printf("Error: Not enough free blocks for the file.\n");
         do {
             printf("Do you want to compact the disk? 1) Yes 2) No\n");
             scanf("%d", &choix);
         } while (choix < 1 || choix > 2);
+
         if (choix == 1) {
-            compactDiskChaine();  // Compact the disk
-            DefragmentationChaine(*F);  // Defragment the file
+            compactDiskChainee();            // Compact the disk
+            Defragmentationchainee(F);      // Defragment the file
+            ChargerFichierChainee(F);       // Retry loading the file
         }
-    }
-    else {
-        if(disk[firstBlockAddress].chainee.free==true){
+    } else {
+        if (disk[firstBlockAddress].chainee.free == true) {
             MajEntetenum(F, 4, firstBlockAddress);  // Update the header with the first block address
-            chargerMetadonnees(*F);  // Load file metadata
+            chargerMetadonnees(*F);                // Load file metadata
         }
         printf("File loaded with %d blocks allocated.\n", allocatedBlocks);
     }
@@ -458,17 +462,13 @@ void ChargerFichierChainee(int fileID, fichier *F) {
         }
     }
     if (diskFull) {
-        printf("The MS is full.\n");
+        printf("The disk is full.\n");
     }
 }
 
-//6.
-void ChargerFichierContigue(int fileID, fichier *F) {
-    if (fileID < 0 || fileID >= MAX_BLOCKS) {
-        printf("Error: Invalid file ID %d.\n", fileID);
-        return;
-    }
 
+//6.//6.fonction charger fichier (contigue)
+void ChargerFichierContigue(fichier *F) {
     int nbBlocs = lireEntete(*F, 2);  // Get the number of blocks required for the file
     int startBlock = -1;  // Address of the first contiguous block
     int choix;
@@ -489,23 +489,31 @@ void ChargerFichierContigue(int fileID, fichier *F) {
 
     // Step 2: If no contiguous space is found, ask the user for disk compaction
     if (startBlock == -1) {
-        printf("Error: Not enough contiguous blocks for file %d.\n", fileID);
+        printf("Error: Not enough contiguous blocks for the file.\n");
         do {
             printf("Do you want to compact the disk? 1) Yes 2) No\n");
             scanf("%d", &choix);
         } while (choix < 1 || choix > 2);
+
         if (choix == 1) {
             compactDiskContigue();  // Compact the disk to free up contiguous space
-            ChargerFichierContigue(fileID, F);  // Retry after compaction
+            ChargerFichierContigue(F);  // Retry after compaction
         }
-    }
-    else{
-       // Update the file's metadata
+    } else {
+        // Mark the blocks as allocated
+        for (int i = startBlock; i < startBlock + nbBlocs; i++) {
+            disk[i].contigue.free = false;
+        }
+
+        // Update the file's metadata
         MajEntetenum(F, 4, startBlock);  // Update with the address of the first block
-        chargerMetadonnees(*F);  // Load the file's metadata
+        MajEntetenum(F, 2, nbBlocs);    // Update the number of blocks
+        chargerMetadonnees(*F);         // Load the file's metadata
+
         printf("File loaded with %d contiguous blocks starting from block %d.\n", nbBlocs, startBlock);
     }
-    // Step 4: Check if the disk is full
+
+    // Step 3: Check if the disk is full
     bool diskFull = true;
     for (int i = 0; i < MAX_BLOCKS; i++) {
         if (disk[i].contigue.free) {
@@ -513,10 +521,13 @@ void ChargerFichierContigue(int fileID, fichier *F) {
             break;
         }
     }
+
     if (diskFull) {
         printf("The storage system is full.\n");
     }
 }
+
+
 
 Enregistrement donneesEnregistrement(){
     Enregistrement E;
