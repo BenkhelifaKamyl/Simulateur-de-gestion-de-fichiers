@@ -10,7 +10,7 @@
 
 
 
-void menu(){
+void Menu(){
     int c1,c=0,k=0, nbE, ID, i;
     char filename[30];
     fichier F;
@@ -48,7 +48,11 @@ void menu(){
             rechercheNomFichier(&F,filename,&i);
             printf("\nDonnez l'ID de l'enregistrement que vous recherchez: ");
             scanf("%d",&ID);
-            rechercheEnregistrement(F,ID);
+            int numBloc, deplacement;
+            if(liretypeTri(F))
+                rechercheEnregistrementNonDense(&F,ID,&numBloc,&deplacement);
+            else
+                rechercheEnregistrementDense(&F,ID,&numBloc,&deplacement);
             break;
         case 5: //Insertion enregistrement
             printf("\nDonnez le nom du fichier dont vous voulez inserer un enregistrement: ");
@@ -68,16 +72,27 @@ void menu(){
             }while(k<1 || k>2);
             printf("\nDonnez l'ID de l'enregistrement a supprimer ");
             scanf("%d",&ID);
-            if(k==1)
-                SuppressionPhysique(&F,ID);
-            else
-                SuppressionLogique(&F,ID);
+            if(k==1){
+                if(c1==1)
+                    deleteRecordLogicalchainee(&F,ID);
+                else
+                    deleteRecordLogicalcontigue(&F,ID);
+            }
+            else{
+                if(c1==1)
+                    deleteRecordPhysicalchaine(&F,ID);
+                else
+                    deleteRecordPhysicalContiguous(&F,ID);
+            }
             break;
         case 7: //Defragmentation
             printf("\nDonnez le nom du fichier dont vous voulez faire une defragmentation: ");
             scanf("%s", filename);
             rechercheNomFichier(&F,filename,&i);
-            Defragmentation(&F);
+            if(c1==1)
+                Defragmentationchainee(&F);
+            else
+                DefragmentationContigue(&F);
         break;
         case 8: //Suppression d'un fichier
             printf("\nDonnez le nom du fichier que vous voulez supprimer: ");
@@ -100,7 +115,10 @@ void menu(){
                 compactDiskContigue();
             break;
         case 11: //Vider le disque
-            clearDisk();
+            if(c1==1)
+                clearDiskchainee();
+            else
+                clearDiskContigue();
             break;
         default: //Fin du programme
             printf("\nFin du programme!!!");

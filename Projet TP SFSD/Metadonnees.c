@@ -38,9 +38,9 @@ void creationFichierMetadonnees(fichier *F, int choix){ //Permet de creer le fic
     F->MDfile = fopen(buffer.name, "wb+");
     fwrite(&buffer, sizeof(MetaDonnee),1,F->MDfile);
     if(choix==1) //Verifier si on peut creer le fichier
-        ChargerFichierChainee(,*F);
+        ChargerFichierChainee(7,F);
     else
-        ChargerFichierContigue(,*F);
+        ChargerFichierContigue(7,F);
 }
 void lireNomFichier(fichier F, char nomFichier[30]){ //Lire le nom du fichier
     rewind(F.MDfile);
@@ -69,12 +69,6 @@ typeOrganisation lireEnteteGlobal(fichier F){ //Retourne si le fichier suit une 
     MetaDonnee MD;
     fread(&MD, sizeof(MetaDonnee),1,F.MDfile);
     return MD.globalOrg;
-}
-typeOrganisation(int nc){
-    if(nc==1)
-        return Chainee;
-    else
-        return Contigue;
 }
 bool liretypeTri(fichier F){ //Retourne vrai si le fchier est trie, sinon faux
     rewind(F.MDfile);

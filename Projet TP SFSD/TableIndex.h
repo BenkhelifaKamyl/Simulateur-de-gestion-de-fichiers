@@ -22,21 +22,19 @@ void TableAllocation();
 //Creation de la table d'index
 void creationTableIndexDenseContigue(fichier F, Index densetableIndex []);
 void creationTableIndexDenseChainee(fichier F, Index densetableIndex []);
-void creationTableIndexNonDenseContigue (fichier F, Index tableIndex [])
+void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []);
 void creationTableIndexNonDenseChainee(fichier F, Index tableIndex[]);
 //Sauvegarder la table d'index en memoire secondaire
 void sauvegardeTableIndex(fichier *F, Index tableindex[]);
 void rechercheTableIndex(fichier *F, int *i); //Recherche une table d'index en MS
 //Mettre le fichier d'index dans une table d'index en Memoire centrale
-void chargementFichierIndexDense(fichier F, Index tableIndex[]);
-void chargementFichierIndexNonDense(fichier F, Index tableIndex[]);
+void chargementFichierIndexDense(fichier *F, Index tableIndex[100]);
+void chargementFichierIndexNonDense(fichier *F, Index tableIndex[100]);
 void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplacement);
 void rechercheEnregistrementNonDense(fichier *F, int ID, int *numBloc, int *deplacement);
 //Cas de mise à jour, suppression, insertion et changement d'adresse  (Peut etre separe en plusieurs fonctions mais est preferable de le faire en une seule)
-void MajTableIndexDense(fichier *F, Enregistrement E, int mode); //mode 1: insertion, mode 2: suppression
-void MajTableIndexNonDense(fichier *F, Enregistrement E, int mode); //Ne pas oublier de charger le fichier en MS
-void clearIndexTable(fichier *F); // Update the index table: clear the entries, as all blocks are free
-
+void MajTableIndexDense(fichier *F, int mode,int ID, int numbloc); //mode 1: insertion, mode 2: suppression
+void MajTableIndexNonDense(fichier *F, int mode,int ID, int numbloc); //Ne pas oublier de charger le fichier en MS
 void removeIndexTable(fichier *F); //Supprime le fichier d'index de la MS
 
 

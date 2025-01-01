@@ -1,6 +1,5 @@
 #ifndef DISK_H_INCLUDED
 #define DISK_H_INCLUDED
-#define MAX_FILES 10        // Nombre maximum de fichiers gérés
 #define BLOCK_SIZE 5      // Taille de chaque bloc (Facteur de blocage)
 #define MAX_BLOCKS 100 //Nombre maximal de blocs dans le disque
 typedef struct{
@@ -50,22 +49,19 @@ void fillFileChainee(int fileID, bool isSorted, fichier *F);
 void fillFileContigue(int fileID, bool isSorted, fichier *F);
 //Chargement
 void ChargerFichierChainee(int fileID, fichier *F);
-bool ChargerFichierContigue(int fileID, fichier *F);
+void ChargerFichierContigue(int fileID, fichier *F);
 //Remplissage Enregistrement
 Enregistrement donneesEnregistrement();
 //Insertion
 void insertRecord(fichier *F, Enregistrement record);
-void insertRecordchainee(fichier *F, Enregistrement record, bool isSorted);
-void insertRecordcontigue(fichier *F, Enregistrement record, bool isSorted);
+void insertRecordChainee(fichier *F, Enregistrement record, bool isSorted);
+void insertRecordContigue(fichier *F, Enregistrement record, bool isSorted);
 //Suppression
-void deleteRecordLogical(int fileID, int recordID);
-void deleteRecordPhysical(int fileID, int recordID);
-void SuppressionLogique(fichier *F, int recordId);
-void SuppressionPhysique(fichier *F, int recordId);
-//Recherche enregistrement
-int rechercheEnregistrement(fichier F, int recordId);
+void deleteRecordPhysicalchaine(fichier *F, int recordID);
+void deleteRecordLogicalcontigue(fichier *F, int recordID);
+void deleteRecordLogicalchainee(fichier *F, int recordID);
+void deleteRecordPhysicalContiguous(fichier *F, int recordID);
 //Defragmentation
-void Defragmentation(fichier *F);
 void DefragmentationContigue(fichier *F);
 void Defragmentationchainee(fichier *F);
 //Supprimer fichier
