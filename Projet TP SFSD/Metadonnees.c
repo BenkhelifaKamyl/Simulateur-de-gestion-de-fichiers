@@ -152,19 +152,22 @@ void MajeEntetetri(fichier *F, int nc){
 }
 void AfficherEntete(){ //Affiche les informations de tous les fichiers de metadonnees
     for(int i=0; i<MAX_FILES; i++){
-        printf("\n*****Affichage des caracteristiques du %d fichier*****\n",i);
-        printf("\nNom fichier: %s", Meta[i].name);
-        printf("\nNombre de blocs: %d",Meta[i].nbBlocs);
-        printf("\nNombre d'enregistrements: %d",Meta[i].nbEnregistrements);
-        printf("\nPremiere adresse du fichier dans le disque: %d",Meta[i].premiereAdresse);
-        if(Meta[i].globalOrg == Chainee)
-            printf("\nOrganisation globale: Chainee");
-        else
-            printf("\nOrganisation globale: Contigue");
-        if(Meta[i].interneOrg == triee)
-            printf("\nOrganisation interne: Triee");
-        else
-            printf("\nOrganisation interne: Non triee");
+        if(Meta[i].nbBlocs!=-1){
+            printf("\n*****Affichage des caracteristiques du %d fichier*****\n",i);
+            printf("\nNom fichier: %s", Meta[i].name);
+            printf("\nNombre de blocs: %d",Meta[i].nbBlocs);
+            printf("\nNombre d'enregistrements: %d",Meta[i].nbEnregistrements);
+            printf("\nPremiere adresse du fichier dans le disque: %d",Meta[i].premiereAdresse);
+            if(Meta[i].globalOrg == Chainee)
+                printf("\nOrganisation globale: Chainee");
+            else
+                printf("\nOrganisation globale: Contigue");
+            if(Meta[i].interneOrg == triee)
+                printf("\nOrganisation interne: Triee");
+            else
+                printf("\nOrganisation interne: Non triee");
+        }
+
     }
 }
 void OuvrirFichier(fichier *F, char mode, int choix){ //Ouvre le fichier, "w" pour ecrire et "r" pour lire

@@ -2,14 +2,80 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
-	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Disk.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4645" topLine="110" />
+			<Cursor1 position="256" topLine="0" />
 		</Cursor>
+	</File>
+	<File name="TableIndex.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1962" topLine="23" />
+		</Cursor>
+	</File>
+	<File name="Metadonnees.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2331" topLine="27" />
+		</Cursor>
+	</File>
+	<File name="Disk.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="16537" topLine="32" />
+		</Cursor>
+		<Folding>
+			<Collapse line="9" />
+			<Collapse line="15" />
+			<Collapse line="47" />
+			<Collapse line="81" />
+			<Collapse line="88" />
+			<Collapse line="94" />
+			<Collapse line="107" />
+			<Collapse line="119" />
+			<Collapse line="172" />
+			<Collapse line="209" />
+			<Collapse line="224" />
+			<Collapse line="239" />
+			<Collapse line="245" />
+			<Collapse line="253" />
+			<Collapse line="344" />
+			<Collapse line="414" />
+			<Collapse line="477" />
+			<Collapse line="533" />
+			<Collapse line="542" />
+			<Collapse line="550" />
+			<Collapse line="625" />
+			<Collapse line="710" />
+			<Collapse line="744" />
+			<Collapse line="779" />
+			<Collapse line="812" />
+			<Collapse line="847" />
+			<Collapse line="903" />
+			<Collapse line="945" />
+			<Collapse line="952" />
+			<Collapse line="975" />
+			<Collapse line="997" />
+		</Folding>
+	</File>
+	<File name="TableIndex.c" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6567" topLine="66" />
+		</Cursor>
+		<Folding>
+			<Collapse line="38" />
+			<Collapse line="69" />
+			<Collapse line="90" />
+			<Collapse line="116" />
+			<Collapse line="124" />
+			<Collapse line="173" />
+			<Collapse line="190" />
+			<Collapse line="207" />
+			<Collapse line="286" />
+			<Collapse line="341" />
+			<Collapse line="354" />
+		</Folding>
 	</File>
 	<File name="Metadonnees.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="11203" topLine="62" />
+			<Cursor1 position="10909" topLine="15" />
 		</Cursor>
 		<Folding>
 			<Collapse line="9" />
@@ -17,48 +83,23 @@
 			<Collapse line="48" />
 			<Collapse line="54" />
 			<Collapse line="73" />
+			<Collapse line="79" />
 			<Collapse line="90" />
 			<Collapse line="101" />
+			<Collapse line="120" />
+			<Collapse line="136" />
 			<Collapse line="152" />
-			<Collapse line="169" />
-			<Collapse line="203" />
-			<Collapse line="210" />
-			<Collapse line="286" />
-			<Collapse line="303" />
-			<Collapse line="319" />
-		</Folding>
-	</File>
-	<File name="TableIndex.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1962" topLine="23" />
-		</Cursor>
-	</File>
-	<File name="Metadonnees.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2332" topLine="27" />
-		</Cursor>
-	</File>
-	<File name="Disk.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="814" topLine="11" />
-		</Cursor>
-	</File>
-	<File name="TableIndex.c" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5224" topLine="15" />
-		</Cursor>
-		<Folding>
-			<Collapse line="9" />
-			<Collapse line="38" />
-			<Collapse line="69" />
-			<Collapse line="92" />
-			<Collapse line="115" />
 			<Collapse line="172" />
-			<Collapse line="189" />
+			<Collapse line="195" />
+			<Collapse line="199" />
 			<Collapse line="206" />
-			<Collapse line="285" />
-			<Collapse line="340" />
-			<Collapse line="353" />
+			<Collapse line="213" />
+			<Collapse line="228" />
+			<Collapse line="265" />
+			<Collapse line="289" />
+			<Collapse line="330" />
+			<Collapse line="346" />
+			<Collapse line="365" />
 		</Folding>
 	</File>
 	<File name="TextColor.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -66,37 +107,9 @@
 			<Cursor1 position="0" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="Disk.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="840" topLine="17" />
+			<Cursor1 position="178" topLine="2" />
 		</Cursor>
-		<Folding>
-			<Collapse line="9" />
-			<Collapse line="45" />
-			<Collapse line="80" />
-			<Collapse line="92" />
-			<Collapse line="103" />
-			<Collapse line="156" />
-			<Collapse line="193" />
-			<Collapse line="208" />
-			<Collapse line="223" />
-			<Collapse line="229" />
-			<Collapse line="237" />
-			<Collapse line="467" />
-			<Collapse line="523" />
-			<Collapse line="532" />
-			<Collapse line="540" />
-			<Collapse line="615" />
-			<Collapse line="700" />
-			<Collapse line="734" />
-			<Collapse line="769" />
-			<Collapse line="802" />
-			<Collapse line="837" />
-			<Collapse line="893" />
-			<Collapse line="935" />
-			<Collapse line="942" />
-			<Collapse line="965" />
-			<Collapse line="987" />
-		</Folding>
 	</File>
 </CodeBlocks_layout_file>
