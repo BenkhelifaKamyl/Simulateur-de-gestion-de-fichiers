@@ -8,49 +8,72 @@
 #include "Disk.h"
 
 bool isDiskContigu(){
-    for(int i=0; i<MAX_BLOCKS;i++){
-        if(disk[i].chainee.next<0)
-            return false;
+    if(currentMode==1){
+        return false;
     }
     return true;
 }
-//Affichage du disque
 void AfficherDisqueContigue(){
     Bloc buffer;
-    int j;
+    int i,j,k,nbBlocs,nbEnregistrements;
     fichier F;
     char filename[30];
-    for(int i=0; i<MAX_BLOCKS; i++){
+    for(i=0; i<MAX_BLOCKS; i++){
         if(checkBlockContigue(i)==false)
                 printf("\nBloc libre.");
         else{
-            memcpy(&buffer, &disk[i],sizeof(Bloc));
-            j=0;
-            while(j<BLOCK_SIZE && strlen(disk[i].contigue.enregistrement[j].Data)!=0)
-                j++;
-            rechercheFichierMeta(i, &F);
+            rechercheFichierMeta(i, &F); //Recuperer les metadonnees du bloc
+            nbBlocs=lireEntete(F,2);
+            nbEnregistrements=lireEntete(F,3);
             lireNomFichier(F,filename);
-            printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+            k=0;
+            while(i<MAX_BLOCKS && k<nbBlocs){
+                if(k==nbBlocs-1){
+                    j=nbEnregistrements%BLOCK_SIZE;
+                    if(j==0){
+                        j=BLOCK_SIZE;
+                    }
+                }
+                else{
+                    j=BLOCK_SIZE;
+                }
+                 printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+                k++;
+            }
+            i+= nbBlocs+1;
+            fclose(F.MDfile);
         }
     }
 }
 void AfficherDisqueChainee(){
     Bloc buffer;
-    int j;
-    char filename[30];
+    int i,j,k,nbBlocs,nbEnregistrements;
     fichier F;
-    for(int i=0; i<MAX_BLOCKS; i++){
+    char filename[30];
+    for(i=0; i<MAX_BLOCKS; i++){
         if(checkBlock(i)==false)
-                printf("\nBloc libre."); //Si le bloc est libre, le marquer comme llibre
+                printf("\nBloc libre.");
         else{
-            memcpy(&buffer, &disk[i],sizeof(Bloc));
-            j=0;
-            while(j<BLOCK_SIZE && disk[i].chainee.enregistrement[j].ID!=-1)
-                j++;
-            rechercheFichierMeta(i,&F);
+            rechercheFichierMeta(i, &F); //Recuperer les metadonnees du bloc
+            nbBlocs=lireEntete(F,2);
+            nbEnregistrements=lireEntete(F,3);
             lireNomFichier(F,filename);
+            k=0;
+            while(i<MAX_BLOCKS && k<nbBlocs){
+                if(k==nbBlocs-1){
+                    j=nbEnregistrements%BLOCK_SIZE;
+                    if(j==0){
+                        j=BLOCK_SIZE;
+                    }
+                }
+                else{
+                    j=BLOCK_SIZE;
+                }
+                 printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+                k++;
+            }
+            i+= nbBlocs+1;
             fclose(F.MDfile);
-            printf("\nNom du fichier: %s et nombre d'enregistrements: %d", filename,j);
         }
     }
 }
@@ -70,6 +93,7 @@ void initializeBlockContigue(int i) {
 
 // Initialisation du disque en mode chaîné
 void initializeDiskChainee() {
+    currentMode = MODE_CHAINE;
     if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
         printf("Erreur : configuration de disque invalide.\n");
         return;
@@ -82,6 +106,7 @@ void initializeDiskChainee() {
 
 // Initialisation du disque en mode contiguë
 void initializeDiskContigue() {
+    currentMode = MODE_CONTIGUE;
     if (MAX_BLOCKS <= 0 || BLOCK_SIZE <= 0) {
         printf("Erreur : configuration de disque invalide.\n");
         return;
@@ -186,8 +211,8 @@ void clearDiskchainee() {
     fichier F;
     // Clear all blocks by setting them as free
     for (int i = 0; i < MAX_BLOCKS; i++) {
-        initializeBlockChainee(i);
         chargerFichierMetadonnees(i,&F);
+        initializeBlockChainee(i);
         if(F.MDfile!=NULL){
             supprimeFichierMetadonnees(&F);
             removeIndexTable(&F);
@@ -201,8 +226,8 @@ void clearDiskContigue() {
     fichier F;
     // Clear all blocks by setting them as free
     for (int i = 0; i < MAX_BLOCKS; i++) {
-        initializeBlockContigue(i);
         chargerFichierMetadonnees(i,&F);
+        initializeBlockContigue(i);
         if(F.MDfile!=NULL){
             supprimeFichierMetadonnees(&F);
             removeIndexTable(&F);
@@ -305,11 +330,6 @@ void fillFileChainee(bool isSorted, fichier *F) {
         disk[previousBlockAddress].chainee.next = -1;
     }
 
-    // Update metadata with the actual number of records filled
-    MajEntetenum(F, 3, recordsFilled); // Update number of records
-    MajEntetenum(F, 2, (recordsFilled + BLOCK_SIZE - 1) / BLOCK_SIZE); // Update actual number of blocks
-    MajEntetenum(F, 4, premiereAdresse < 0 ? previousBlockAddress : premiereAdresse); // Update first block address
-
     // Create and save the index table
     Index tableIndex[100];
     if (liretypeTri(*F)) { // Sorted case
@@ -387,7 +407,6 @@ void fillFileContigue(bool isSorted, fichier *F) {
     } else { // Unsorted case
         creationTableIndexDenseContigue(*F, tableIndex);
     }
-    printf("\nTest krkr\n");
     sauvegardeTableIndex(F, tableIndex);
     printf("File filled in contiguous mode with %d records. Sorted: %s\n", recordsFilled, isSorted ? "Yes" : "No");
 }

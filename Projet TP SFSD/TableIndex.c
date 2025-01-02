@@ -46,26 +46,26 @@ void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
     int nbEnregistrements = lireEntete(F,3);
     int i=premiereAdresse;
 
-    while(i!=-1){
+    while(i!=-1 && k<nbEnregistrements){
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
             for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
                 X.id=buffer.chainee.enregistrement[j].ID;
                 X.numBloc= i; //Position du bloc pas de l'enregistrement
-                i=buffer.chainee.next;
                 m=0;
                 while(m<k && X.id > densetableIndex[m].id){ //Recherche de la position dans laquelle inserer
                     m++;
                 }
-                for(int n=k; n>m; n++){ //Decalage
+                for(int n=k; n>m; n--){ //Decalage
                     densetableIndex[n]=densetableIndex[n-1];
                 }
                 memcpy(&densetableIndex[m],&X, sizeof(Index)); //Copie d'enregistrement
                 k++;
             }
+            i=buffer.chainee.next;
         }
     }
-    printf("\n la table d'index à été crée avec succes.");
+    printf("\nLa table d'index a ete cree avec succes.");
 }
 void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -77,11 +77,9 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     int premiereAdresse = lireEntete(F,4);
     int nbEnregistrements = lireEntete(F,3);
 
-    for(int i=premiereAdresse;i<=premiereAdresse+nbBlocs;i++){
+    for(int i=premiereAdresse;i< premiereAdresse+nbBlocs;i++){
         if(checkBlockContigue(i)){ //Verifie si le bloc est valide
             memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
-            rewind(F.MDfile);
-            fread(&MD,sizeof(MetaDonnee),1,F.MDfile);
             X.id=buffer.contigue.enregistrement[0].ID;
             X.numBloc= i; //Position du bloc pas de l'enregistrement
             memcpy(&tableIndex[k],&X,sizeof(Index)); //Ajout dans la table d'index
@@ -106,9 +104,12 @@ void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
             memcpy(&buffer,&disk[i],sizeof(Bloc)); //Copie du bloc
             X.id=buffer.chainee.enregistrement[0].ID;
             X.numBloc= i; //Position du bloc pas de l'enregistrement
-            i=buffer.chainee.next;
             memcpy(&tableIndex[k],&X,sizeof(Index)); //Ajout dans la table d'index
             k++;
+            i=buffer.chainee.next;
+        }
+        else{
+            i=-1;
         }
     }
     printf("\n la table d'index non dense à été crée avec succes.");
@@ -233,7 +234,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
                     }
                 }
             }
-            printf("\nEnregistrement trouvé , numbloc:%d , déplacement:%d \n", *numBloc, *deplacement);
+            printf("\nEnregistrement trouve , numbloc:%d , deplacement:%d \n", *numBloc, *deplacement);
             return;
         } else if (tableIndex[milieu].id < ID) {
             gauche = milieu + 1;
@@ -279,7 +280,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
         }while(*deplacement==-1);
         if(*deplacement==-2) *deplacement=-1;
     }
-    printf("\nEnregistrement non trouvé\n");
+    printf("\nEnregistrement non trouve\n");
     }
 
 }
@@ -312,7 +313,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
                     }
                 }
             }
-            printf("\nEnregistrement trouvé , numbloc:%d , déplacement:%d \n", *numbloc, *deplacement);
+            printf("\nEnregistrement trouve , numbloc:%d , deplacement:%d \n", *numbloc, *deplacement);
             return;
         } else if (tableIndex[milieu].id< ID) {
             gauche = milieu + 1;
@@ -333,7 +334,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
                 i++;
             *deplacement=i;
         }
-        printf("\nEnregistrement non trouvé\n");
+        printf("\nEnregistrement non trouve\n");
     }
 
 }

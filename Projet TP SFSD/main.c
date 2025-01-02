@@ -8,10 +8,8 @@
 #include "Disk.h"
 
 
-
-
 void Menu(){
-    int c1,c=0,k=0, nbE, ID, i;
+    int c1,c=0,k=0, ID, i;
     char filename[30];
     fichier F;
     Enregistrement E;
@@ -118,6 +116,10 @@ void Menu(){
                 clearDiskContigue();
             break;
         default: //Fin du programme
+            if(c1==1)
+                clearDiskchainee();
+            else
+                clearDiskContigue();
             printf("\nFin du programme!!!");
             break;
         }

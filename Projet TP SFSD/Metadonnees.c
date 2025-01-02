@@ -243,7 +243,7 @@ void chargerMetadonnees(fichier F) { // Charge le fichier de metadonnees dans la
         return;
     }
     rechercheNomFichier(&G, filename, &i);
-    printf("\i: %d\n",i);
+    printf("\ni: %d\n",i);
     if(i>=0 && i<MAX_FILES){
         memcpy(&Meta[i],&buffer,sizeof(buffer));
     }
@@ -266,7 +266,7 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le f
     int i = 0;
     while(i <MAX_FILES){
         if(Meta[i].premiereAdresse==premiereAdresse){
-            F->MDfile=fopen(Meta[i].name,"wb+");
+            F->MDfile=fopen(Meta[i].name,"rb+");
             if(F->MDfile==NULL){
                 printf("\nErreur d'ecriture dans le fichier MDfile dans la fct chargerFichierMetaDonnees.");
                 return;
@@ -287,17 +287,41 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le f
 void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metadonnees selon un numero de bloc
     bool trouve=false;
     int i=0;
-    while(trouve==false && i<MAX_FILES){
-        if(Meta[i].premiereAdresse==nBloc){
-            chargerFichierMetadonnees(nBloc,F);
-            trouve=true;
+    if(isDiskContigu()){
+         while(trouve==false && i<MAX_FILES){
+            if(Meta[i].premiereAdresse==nBloc){
+                chargerFichierMetadonnees(nBloc,F);
+                trouve=true;
+            }
+            else if(nBloc>Meta[i].premiereAdresse && nBloc<(Meta[i].premiereAdresse + Meta[i].nbBlocs)){
+                chargerFichierMetadonnees(Meta[i].premiereAdresse,F);
+                trouve=true;
+            }
+            i++;
         }
-        else if(nBloc>Meta[i].premiereAdresse && nBloc<=(Meta[i].premiereAdresse + Meta[i].nbBlocs)){
-            chargerFichierMetadonnees(Meta[i].premiereAdresse,F);
-            trouve=true;
-        }
-        i++;
     }
+    else{
+        while(trouve==false && i<MAX_FILES){
+            if(Meta[i].premiereAdresse==nBloc){
+                chargerFichierMetadonnees(nBloc,F);
+                trouve=true;
+            }
+            else{
+                int BlocActuel = Meta[i].premiereAdresse;
+                while(BlocActuel!=-1 && trouve==false){
+                    if(BlocActuel==nBloc){
+                        chargerFichierMetadonnees(Meta[i].premiereAdresse,F);
+                        trouve=true;
+                    }
+                    else{
+                        BlocActuel= disk[BlocActuel].chainee.next;
+                    }
+                }
+            }
+            i++;
+        }
+    }
+
     if(trouve==false)
         printf("\nLe fichier de metadonnees n'a pas ete trouve dans recherchefichiermeta.");
 }
@@ -322,8 +346,11 @@ void supprimeFichierMetadonnees(fichier *F){
     char filename[30];
     lireNomFichier(*F,filename);
     rechercheNomFichier(F,filename,&i);
-    fclose(F->MDfile);
-    remove(filename);
+    if(F->MDfile!=NULL){
+        fclose(F->MDfile);
+        remove(filename);
+    }
+
 
         if(strcmp(filename,Meta[i].name)==0){
             strcpy(Meta[i].name, " ");

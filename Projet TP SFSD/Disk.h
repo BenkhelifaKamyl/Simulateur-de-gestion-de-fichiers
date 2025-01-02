@@ -2,6 +2,11 @@
 #define DISK_H_INCLUDED
 #define BLOCK_SIZE 5      // Taille de chaque bloc (Facteur de blocage)
 #define MAX_BLOCKS 100 //Nombre maximal de blocs dans le disque
+#define MODE_CHAINE 1
+#define MODE_CONTIGUE 2
+
+int currentMode;
+
 typedef struct{
     int ID;
     char Data[100];
