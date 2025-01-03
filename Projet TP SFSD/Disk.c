@@ -13,50 +13,58 @@ bool isDiskContigu(){
     }
     return true;
 }
-void AfficherDisqueContigue(){
-    int i,j,k,nbBlocs,nbEnregistrements;
+void AfficherDisqueContigue() {
+    int i, j, k, nbBlocs, nbEnregistrements, premiereAdresse;
+    Bloc buffer;
     fichier F;
     char filename[30];
-    for(i=0; i<MAX_BLOCKS; i++){
-        if(checkBlockContigue(i)==false)
-                printf("\nBloc libre.");
-        else{
-            rechercheFichierMeta(i, &F); //Recuperer les metadonnees du bloc
-            nbBlocs=lireEntete(F,2);
-            nbEnregistrements=lireEntete(F,3);
-            lireNomFichier(F,filename);
-            k=0;
-            while(i<MAX_BLOCKS && k<nbBlocs){
-                if(k==nbBlocs-1){
-                    j=nbEnregistrements%BLOCK_SIZE;
-                    if(j==0){
-                        j=BLOCK_SIZE;
+
+    for (i = 0; i < MAX_BLOCKS; i++) {
+        if (checkBlockContigue(i) == false) {
+            printf("\nBloc libre.");
+        } else {
+            rechercheFichierMeta(i, &F); // Recuperer les metadonnees du bloc
+            nbBlocs = lireEntete(F, 2);
+            nbEnregistrements = lireEntete(F, 3);
+            premiereAdresse = lireEntete(F, 4);
+            lireNomFichier(F, filename);
+
+            // Parcourir tous les blocs du fichier
+            for (k = 0; k < nbBlocs; k++) {
+                if (i + k >= MAX_BLOCKS) break;  // Sortir si on dépasse les blocs disponibles
+
+                if (k == nbBlocs - 1) {
+                    j = nbEnregistrements % BLOCK_SIZE;
+                    if (j == 0) {
+                        j = BLOCK_SIZE;
                     }
+                } else {
+                    j = BLOCK_SIZE;
                 }
-                else{
-                    j=BLOCK_SIZE;
-                }
-                 printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
-                k++;
+
+                printf("\nNom du fichier: %s et nombre d'enregistrements: %d", filename, j);
             }
-            i+= nbBlocs+1;
-            fclose(F.MDfile);
+            i += nbBlocs - 1;  // Avancer `i` de `nbBlocs - 1` pour passer aux prochains blocs
+
+            fclose(F.MDfile);  // Fermer le fichier de metadonnees après traitement
         }
     }
 }
+
 void AfficherDisqueChainee(){
-    int i,j,k,nbBlocs,nbEnregistrements;
+    int i,j,nbEnregistrements;
+    Bloc buffer;
     fichier F;
     char filename[30];
     for(i=0; i<MAX_BLOCKS; i++){
         if(checkBlock(i)==false)
                 printf("\nBloc libre.");
         else{
+            memcpy(&buffer,&disk[i],sizeof(Bloc));
             rechercheFichierMeta(i, &F); //Recuperer les metadonnees du bloc
-            nbBlocs=lireEntete(F,2);
             nbEnregistrements=lireEntete(F,3);
             lireNomFichier(F,filename);
-                if(disk[i].chainee.next==-1){
+                if(buffer.chainee.next==-1){
                     j=nbEnregistrements%BLOCK_SIZE;
                     if(j==0){
                         j=BLOCK_SIZE;
@@ -112,54 +120,67 @@ void initializeDiskContigue() {
 }
 
 void compactDiskChainee() {
-    Bloc buffer; // Temporary buffer for moving blocks
-    int lastFreeBlock = -1; // Track the last free block
+    Bloc buffer;  // Temporary buffer for moving blocks
     fichier F;
+    int freeIndex = 0;  // Index of the first free block
 
-    for (int i = 0; i < MAX_BLOCKS; i++) {
-        if (disk[i].chainee.free) {
-            if (lastFreeBlock == -1) {
-                lastFreeBlock = i; // Find the first free block
-            }
-        } else if (lastFreeBlock != -1) {
-            // Load the metadata of the associated file
-            chargerFichierMetadonnees(i, &F);
+    // Parcourir chaque fichier
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (Meta[i].premiereAdresse != -1) {
+            // Charger les métadonnées du fichier
+            chargerFichierMetadonnees(Meta[i].premiereAdresse, &F);
 
-            // Use the temporary buffer to store the current block
-            memcpy(&buffer, &disk[i], sizeof(Bloc));
+            int currentBlockID = lireEntete(F, 4);
+            int prevBlockID = -1;
 
-            // Move the block to the last free space
-            memcpy(&disk[lastFreeBlock], &buffer, sizeof(Bloc));
-
-            // Update the file metadata and pointers
-            if (F.MDfile != NULL) {
-                // Update the block's metadata if it's the first block
-                if (lireEntete(F, 4) == i) {
-                    MajEntetenum(&F, 4, lastFreeBlock); // Update the first address
+            // Parcourir les blocs associés à ce fichier
+            while (currentBlockID != -1) {
+                // Trouver le prochain bloc libre
+                while (freeIndex < MAX_BLOCKS && !disk[freeIndex].chainee.free) {
+                    freeIndex++;
                 }
-                // Update any references to the moved block in the chain
-                for (int j = 0; j < MAX_BLOCKS; j++) {
-                    if (disk[j].chainee.next == i) {
-                        disk[j].chainee.next = lastFreeBlock;
-                        break;
+
+                // Si le bloc libre est avant le bloc courant, déplacer le bloc
+                if (freeIndex < currentBlockID) {
+                    // Utiliser le buffer temporaire pour stocker le bloc courant
+                    memcpy(&buffer, &disk[currentBlockID], sizeof(Bloc));
+
+                    // Déplacer le bloc vers le dernier espace libre
+                    memcpy(&disk[freeIndex], &buffer, sizeof(Bloc));
+
+                    // Mettre à jour les métadonnées et les pointeurs du fichier
+                    if (prevBlockID != -1) {
+                        disk[prevBlockID].chainee.next = freeIndex;
+                    } else {
+                        MajEntetenum(&F, 4, freeIndex);  // Mettre à jour la première adresse
                     }
+
+                    // Mettre à jour toutes les références au bloc déplacé dans la chaîne
+                    for (int j = 0; j < MAX_BLOCKS; j++) {
+                        if (disk[j].chainee.next == currentBlockID) {
+                            disk[j].chainee.next = freeIndex;
+                            break;
+                        }
+                    }
+
+                    // Libérer l'ancien bloc
+                    disk[currentBlockID].chainee.free = true;
+                    disk[currentBlockID].chainee.next = -1;
+
+                    // Mettre à jour l'ID du bloc courant
+                    currentBlockID = freeIndex;
                 }
-                chargerMetadonnees(F); // Reload metadata
+
+                // Passer au bloc suivant
+                prevBlockID = currentBlockID;
+                currentBlockID = disk[currentBlockID].chainee.next;
             }
 
-            // Free the old block
-            disk[i].chainee.free = true;
-            disk[i].chainee.next = -1;
-
-            // Find the next free block
-            for (int j = lastFreeBlock + 1; j < MAX_BLOCKS; j++) {
-                if (disk[j].chainee.free) {
-                    lastFreeBlock = j;
-                    break;
-                }
-            }
+            // Recharger les métadonnées pour refléter les changements
+            chargerMetadonnees(F);
         }
     }
+
     printf("Disk compacted in chained mode.\n");
 }
 
@@ -181,7 +202,9 @@ void compactDiskContigue() {
             // Déplace le bloc dans l'espace libre
             memcpy(&disk[lastFreeBlock], &buffer, sizeof(Bloc));
             if(F.MDfile!=NULL){
-                MajEntetenum(&F,4,lastFreeBlock);
+                if(lireEntete(F,4)==i){
+                    MajEntetenum(&F,4,lastFreeBlock);
+                }
                 chargerMetadonnees(F);
             }
             // Libère l'ancien bloc
