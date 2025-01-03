@@ -56,9 +56,7 @@ void AfficherDisqueChainee(){
             nbBlocs=lireEntete(F,2);
             nbEnregistrements=lireEntete(F,3);
             lireNomFichier(F,filename);
-            k=0;
-            while(i<MAX_BLOCKS && k<nbBlocs){
-                if(k==nbBlocs-1){
+                if(disk[i].chainee.next==-1){
                     j=nbEnregistrements%BLOCK_SIZE;
                     if(j==0){
                         j=BLOCK_SIZE;
@@ -67,13 +65,11 @@ void AfficherDisqueChainee(){
                 else{
                     j=BLOCK_SIZE;
                 }
-                 printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
-                k++;
+                printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+                fclose(F.MDfile);
             }
-            i+= nbBlocs+1;
-            fclose(F.MDfile);
+
         }
-    }
 }
 
 // Initialisation d'un bloc pour l'organisation chaînée
