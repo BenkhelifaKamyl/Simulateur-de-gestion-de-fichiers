@@ -14,7 +14,6 @@ bool isDiskContigu(){
     return true;
 }
 void AfficherDisqueContigue(){
-    Bloc buffer;
     int i,j,k,nbBlocs,nbEnregistrements;
     fichier F;
     char filename[30];
@@ -46,7 +45,6 @@ void AfficherDisqueContigue(){
     }
 }
 void AfficherDisqueChainee(){
-    Bloc buffer;
     int i,j,k,nbBlocs,nbEnregistrements;
     fichier F;
     char filename[30];
@@ -976,15 +974,10 @@ void deleteFilechainee(fichier *F) {
 void deleteFileContigue(fichier *F) {
     int firstAdress = lireEntete(*F,4);
     int nbBlocs = lireEntete(*F,2);
-    int currentBlockID = firstAdress;
+
     // Traverse and free all blocks of the file using the linked list
     for(int i = firstAdress; i<nbBlocs+firstAdress; i++) {
-        int nextBlockID = disk[currentBlockID].chainee.next;  // Store next block ID
-
-        // Clear current block
-        initializeBlockContigue(currentBlockID); //Reinitialise le bloc
-
-        currentBlockID = nextBlockID;  // Move to the next block
+        initializeBlockContigue(i); //Reinitialise le bloc
     }
 
     // Remove file from the index table
