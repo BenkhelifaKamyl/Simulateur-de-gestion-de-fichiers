@@ -22,10 +22,10 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []) {
                 X.id = buffer.contigue.enregistrement[j].ID;
                 X.numBloc = i; // Position du bloc, pas de l'enregistrement
                 m = 0;
-                while (m < k && X.id > densetableIndex[m].id) { // Recherche de la position dans laquelle ins√©rer
+                while (m < k && X.id > densetableIndex[m].id) { // Recherche de la position dans laquelle insÈrer
                     m++;
                 }
-                for (int n = k; n > m; n--) { // D√©calage
+                for (int n = k; n > m; n--) { // DÈcalage
                     densetableIndex[n] = densetableIndex[n - 1];
                 }
                 memcpy(&densetableIndex[m], &X, sizeof(Index)); // Copie d'enregistrement
@@ -86,7 +86,7 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
             k++;
         }
     }
-    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
  }
 void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
     Bloc buffer;
@@ -112,7 +112,7 @@ void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
             i=-1;
         }
     }
-    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index non dense ‡ ÈtÈ crÈe avec succes.");
 }
 void initializeIndexFiles(){
     for(int i=0; i<MAX_FILES; i++){
@@ -216,7 +216,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entr√©e de l'index au milieu
+        // Lire l'entrÈe de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
             *numBloc = tableIndex[milieu].numBloc; //Numero du bloc
@@ -295,7 +295,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entr√©e de l'index au milieu
+        // Lire l'entrÈe de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
             *numbloc = tableIndex[milieu].numBloc;
@@ -352,134 +352,108 @@ void removeIndexTable(fichier *F){
             tablesIndex[i][j].numBloc=-1;
     }
 }
+void MajTableIndexDense(fichier *F, int mode, int ID, int numbloc) {
+    int nbEngis = lireEntete(*F, 3);
+    int nbrBlocs = lireEntete(*F, 2);
+    int premierAdresse = lireEntete(*F, 4);
+    int i, deplacement, j, adresse;
+    Index tableIndex[100];
+    chargementFichierIndexDense(F, tableIndex); // Charger le fichier d'index en MC
 
-void MajTableIndexDense(fichier *F, int mode,int ID, int numbloc){
-int nbEngis=lireEntete(F,3);
-int nbrBlocs=lireEntete(F,2);
-int premiereAdresse=lireEntete(F,4);
-int i,d√©placement,j,adresse;
-FILE *f=F.TableIndex;
-rewind(f);
-Index tableIndex[];
-chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
-if(mode<1 && mode>3){
-printf("\nOperation invalide\n");
-}
-
-if(mode == 1){ // cas de suppression
-   i=0;
-while(i<nbEngis){
-    rechercheEnregistrementDense(F,ID,&adresse,&d√©placement);
-tableIndex[i+1].numbloc=&adresse;
-memcpy(&tableIndex[i],&tableIndex[i+1],sizeof(Index));
-i++;
-}    
-
-
-//v√©rifications
-
-    if(lireEnteteGlobal(*F)==Contigue){
-            int k=0;
-        for(i=premierAdresse;i<premierAdresse+nbrBlocs;i++){
-         for(j=0;j<nbEngis;j++){       
-       if( disk[i].contigue.enregistrement[j].ID== tableIndex[k].ID){
-         tableIndex[k].numbloc=i;
+    if (mode < 1 || mode > 3) {
+        printf("\nOperation invalide\n");
     }
-       else{
-        tableIndex[k].numbloc=disk[i].contigue.adresse;
-       }
-       k++;
-    }
-    }
-    else{
-            k=0;
-            i=numbloc;
-            while(i<i+nbrBlocs && disk.chainee.next!=NULL){
-                j=0;
-                while(j<nbEngis){
-        if(disk[i].chainee.enregistrement[j].ID==tableIndex[k].ID ){
-            tableIndex[k].numbloc=i;
+
+    if (mode == 1) { // cas de suppression
+        i = 0;
+        while (i < nbEngis) {
+            rechercheEnregistrementDense(F, ID, &adresse, &deplacement);
+            tableIndex[i + 1].numBloc = adresse;
+            memcpy(&tableIndex[i], &tableIndex[i + 1], sizeof(Index));
+            i++;
         }
-        else{
-           tableIndex[k].numbloc=disk.chainee.adresse;
+
+        // vÈrifications
+        if (lireEnteteGlobal(*F) == Contigue) {
+            int k = 0;
+            for (i = premierAdresse; i < premierAdresse + nbrBlocs; i++) {
+                for (j = 0; j < nbEngis; j++) {
+                    if (disk[i].contigue.enregistrement[j].ID ==tableIndex[k].id) {
+                        tableIndex[k].numBloc = i;
+                        k++;
+                    }
+                    }
+                }
+            }
+            else {
+            int k = 0;
+            i = numbloc;
+            while (disk[i].chainee.next != NULL) {
+                j = 0;
+                while (j < nbEngis) {
+                    if (disk[i].chainee.enregistrement[j].ID == tableIndex[k].id) {
+                        tableIndex[k].numBloc = i;
+                    }
+                    k++;
+                    j++;
+                }
+                i = disk[i].chainee.next;
+            }
         }
-    k++;
-               j++;
-    }
-    i++; 
-    disk[i].chainee=disk[i].chainee.next;
-}
-    }
-    } 
-sauvegardeTableIndex(&F,tableIndex);
-}
-
-else if(mode == 2){ // cas d'insertion
-i=0;
-while(ID>tableIndex[i].ID){
-i++;
-t=nbEngis;
-while(k>i){
-memcpy(&tableIndex[k],&tableIndex[k-1],sizeof(Index));
-k--;
-}
-}
-Index index ;
-index.ID=ID;
-index.numbloc=numbloc;
-memcpy(&tableIndex[i],&index,sizeof(Index));
-
-if(lireEnteteGlobal(*F)==Contigue){
-            int k=0;
-        for(i=premierAdresse;i<premierAdresse+nbrBlocs;i++){
-         for(j=0;j<nbEngis;j++){       
-       if( disk[i].contigue.enregistrement[j].ID== tableIndex[k].ID){
-         tableIndex[k].numbloc=i;
-    }
-       else{
-        tableIndex[k].numbloc=disk[i].contigue.adresse;
-       }
-       k++;
-    }
-    }
-    else{
-            k=0;
-            i=numbloc;
-            while(i<i+nbrBlocs && disk.chainee.next!=NULL){
-                j=0;
-                while(j<nbEngis){
-        if(disk[i].chainee.enregistrement[j].ID==tableIndex[k].ID ){
-            tableIndex[k].numbloc=i;
+        sauvegardeTableIndex(F, tableIndex);
+    } else if (mode == 2) { // cas d'insertion
+        i = 0;
+        while (ID > tableIndex[i].id) {
+            i++;
         }
-        else{
-           tableIndex[k].numbloc=disk.chainee.adresse;
+        int t = nbEngis;
+        while (t > i) {
+            memcpy(&tableIndex[t], &tableIndex[t - 1], sizeof(Index));
+            t--;
         }
-    k++;
-               j++;
+        Index index;
+        index.id = ID;
+        index.numBloc = numbloc;
+        memcpy(&tableIndex[i], &index, sizeof(Index));
+
+        if (lireEnteteGlobal(*F) == Contigue) {
+            int k = 0;
+            for (i = premierAdresse; i < premierAdresse + nbrBlocs; i++) {
+                for (j = 0; j < nbEngis; j++) {
+                    if (disk[i].contigue.enregistrement[j].ID == tableIndex[k].id) {
+                        tableIndex[k].numBloc = i;
+                    }
+                    k++;
+                }
+            }
+        } else {
+            int k = 0;
+            i = numbloc;
+            while (disk[i].chainee.next != NULL) {
+                j = 0;
+                while (j < nbEngis) {
+                    if (disk[i].chainee.enregistrement[j].ID == tableIndex[k].id) {
+                        tableIndex[k].numBloc = i;
+                    }
+                    k++;
+                    j++;
+                }
+                i=disk[i].chainee.next;
+            }
+        }
+        sauvegardeTableIndex(F, tableIndex);
+    } else if (mode == 3) { // cas de changement d'adresse
+        rechercheEnregistrementDense(F, ID, &j, &deplacement);
+        tableIndex[j].numBloc = numbloc;
+        sauvegardeTableIndex(F, tableIndex);
     }
-    i++; 
-    disk[i].chainee=disk[i].chainee.next;
-}
-    }
-    } 
-sauvegardeTableIndex(&F,tableIndex);
 }
 
-else if(mode == 3){  // cas de changement d'adresse
-rechercheEnregistrementDense(&F,ID,&j,&d√©placement);
-tableIndex[j].numbloc=j;
-    sauvegardeTableIndex(&F,tableIndex);
-}
-
-
-}
-
-void MajTableIndexNonDense(fichier *F, int mode,int ID, int numbloc) {
-    int nbrBlocs = lireEntete(*F, 2); //Lire le nbre de blocs
+void MajTableIndexNonDense(fichier *F, int mode, int ID, int numbloc) {
+    int nbrBlocs = lireEntete(*F, 2); // Lire le nombre de blocs
     int i, deplacement, j;
     rewind(F->TableIndex);
     Index tableIndex[100];
-//    rechercheTableIndex(F, &i); //Charger le fichier
     chargementFichierIndexNonDense(F, tableIndex); // Charger le fichier d'index en MC
 
     if (mode < 1 || mode > 3) {
@@ -487,26 +461,29 @@ void MajTableIndexNonDense(fichier *F, int mode,int ID, int numbloc) {
     }
 
     if (mode == 1) { // cas de suppression
-        rechercheEnregistrementNonDense(&F, ID, &j, &deplacement); //Trouver l'adresse de l'enregistrement a supprimer
+        rechercheEnregistrementNonDense(F, ID, &j, &deplacement); // Trouver l'adresse de l'enregistrement ‡ supprimer
         i = 0;
         while (j < nbrBlocs) {
             memcpy(&tableIndex[j], &tableIndex[j + 1], sizeof(Index));
             i++;
         }
-    }
-    else if (mode == 2) { // cas d'insertion
+    } else if (mode == 2) { // cas d'insertion
         i = 0;
         while (ID > tableIndex[i].id) {
             i++;
-            int k = nbrBlocs;
-            while (k > i) {
-                memcpy(&tableIndex[k], &tableIndex[k - 1], sizeof(Index));
-                k--;
-            }
         }
-    }
-    else if (mode == 3) {
-        rechercheEnregistrementNonDense(&F, ID, &j, &deplacement);
+        int k = nbrBlocs;
+        while (k > i) {
+            memcpy(&tableIndex[k], &tableIndex[k - 1], sizeof(Index));
+            k--;
+        }
+        Index index;
+        index.id = ID;
+        index.numBloc = numbloc;
+        memcpy(&tableIndex[i], &index, sizeof(Index));
+    } else if (mode == 3) { // cas de changement d'adresse
+        rechercheEnregistrementNonDense(F, ID, &j, &deplacement);
         tableIndex[j].numBloc = numbloc;
+        sauvegardeTableIndex(F, tableIndex);
     }
 }

@@ -117,7 +117,6 @@ void MajEntetenum(fichier *F, int nc, int val) { //Met a jour les caracteristiqu
     rewind(F->MDfile);
     fwrite(&MD, sizeof(MetaDonnee), 1, F->MDfile);
 }
-
 void MajeEnteteOrga(fichier *F, int nc){
     rewind(F->MDfile);
     MetaDonnee MD;
@@ -280,8 +279,6 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le f
         }
         i++;
     }
-
-
     if(check==false){
         printf("\nCe fichier n'existe pas.");
         F->MDfile=NULL;
@@ -290,14 +287,16 @@ void chargerFichierMetadonnees(int premiereAdresse, fichier *F){ //Recupere le f
 void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metadonnees selon un numero de bloc
     bool trouve=false;
     int i=0;
+    MetaDonnee Buffer;
     if(isDiskContigu()){
          while(trouve==false && i<MAX_FILES){
-            if(Meta[i].premiereAdresse==nBloc){
+            memcpy(&Buffer, &Meta[i],sizeof(MetaDonnee));
+            if(Buffer.premiereAdresse==nBloc){
                 chargerFichierMetadonnees(nBloc,F);
                 trouve=true;
             }
-            else if(nBloc>Meta[i].premiereAdresse && nBloc<(Meta[i].premiereAdresse + Meta[i].nbBlocs)){
-                chargerFichierMetadonnees(Meta[i].premiereAdresse,F);
+            else if(nBloc>Buffer.premiereAdresse && nBloc<(Buffer.premiereAdresse + Buffer.nbBlocs)){
+                chargerFichierMetadonnees(Buffer.premiereAdresse,F);
                 trouve=true;
             }
             i++;
@@ -305,15 +304,16 @@ void rechercheFichierMeta(int nBloc, fichier *F){ //Recupere le fichier de metad
     }
     else{
         while(trouve==false && i<MAX_FILES){
-            if(Meta[i].premiereAdresse==nBloc){
+            memcpy(&Buffer, &Meta[i],sizeof(MetaDonnee));
+            if(Buffer.premiereAdresse==nBloc){
                 chargerFichierMetadonnees(nBloc,F);
                 trouve=true;
             }
             else{
-                int BlocActuel = Meta[i].premiereAdresse;
+                int BlocActuel = Buffer.premiereAdresse;
                 while(BlocActuel!=-1 && trouve==false){
                     if(BlocActuel==nBloc){
-                        chargerFichierMetadonnees(Meta[i].premiereAdresse,F);
+                        chargerFichierMetadonnees(Buffer.premiereAdresse,F);
                         trouve=true;
                     }
                     else{

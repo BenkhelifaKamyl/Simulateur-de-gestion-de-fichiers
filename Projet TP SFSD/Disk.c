@@ -21,9 +21,12 @@ void AfficherDisqueContigue() {
 
     for (i = 0; i < MAX_BLOCKS; i++) {
         if (checkBlockContigue(i) == false) {
+            boldColor(2);
             printf("\nBloc libre.");
+            resetColor();
         } else {
             rechercheFichierMeta(i, &F); // Recuperer les metadonnees du bloc
+            if(F.MDfile==NULL) continue;
             nbBlocs = lireEntete(F, 2);
             nbEnregistrements = lireEntete(F, 3);
             premiereAdresse = lireEntete(F, 4);
@@ -41,11 +44,11 @@ void AfficherDisqueContigue() {
                 } else {
                     j = BLOCK_SIZE;
                 }
-
+                boldColor(1);
                 printf("\nNom du fichier: %s et nombre d'enregistrements: %d", filename, j);
+                resetColor();
             }
             i += nbBlocs - 1;  // Avancer `i` de `nbBlocs - 1` pour passer aux prochains blocs
-
             fclose(F.MDfile);  // Fermer le fichier de metadonnees après traitement
         }
     }
@@ -57,8 +60,11 @@ void AfficherDisqueChainee(){
     fichier F;
     char filename[30];
     for(i=0; i<MAX_BLOCKS; i++){
-        if(checkBlock(i)==false)
-                printf("\nBloc libre.");
+        if(checkBlock(i)==false){
+            boldColor(2);
+            printf("\nBloc libre.");
+            resetColor();
+        }
         else{
             memcpy(&buffer,&disk[i],sizeof(Bloc));
             rechercheFichierMeta(i, &F); //Recuperer les metadonnees du bloc
@@ -73,7 +79,9 @@ void AfficherDisqueChainee(){
                 else{
                     j=BLOCK_SIZE;
                 }
+                boldColor(1);
                 printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+                resetColor();
                 fclose(F.MDfile);
             }
 

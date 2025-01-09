@@ -3,6 +3,6 @@
 
 void color(int i);
 void boldColor(int i);
-void resetClor();
+void resetColor();
 
 #endif // TEXTCOLOR_H_INCLUDED
