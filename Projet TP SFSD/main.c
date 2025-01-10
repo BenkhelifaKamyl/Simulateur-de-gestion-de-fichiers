@@ -55,6 +55,7 @@ void Menu(){
                 rechercheEnregistrementNonDense(&F,ID,&numBloc,&deplacement);
             else
                 rechercheEnregistrementDense(&F,ID,&numBloc,&deplacement);
+            printf("\nNumero bloc: %d et deplacement: %d", numBloc, deplacement);
             break;
         case 5: //Insertion enregistrement
             printf("\nDonnez le nom du fichier dont vous voulez inserer un enregistrement: ");

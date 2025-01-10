@@ -11,22 +11,20 @@
 typedef struct{
     int id;
     int numBloc;
-} Index; //Verifier si cette structure est correcte pour les 2 cas dense et non dense, faire si necessaire une autre structure
+} Index; //Structure de l'index
 
 
- //Fichier contenant tous les fichiers d'index
-//Les parametres des fonctions n'ont pas encore été attribuées
-Index tablesIndex[MAX_FILES][MAX_INDEX_ENTRIES];
+Index tablesIndex[MAX_FILES][MAX_INDEX_ENTRIES]; //"MS" contenant les tables d'index
 
 //Creation de la table d'index
 void initializeIndexFiles();
-void creationTableIndexDenseContigue(fichier F, Index densetableIndex []);
-void creationTableIndexDenseChainee(fichier F, Index densetableIndex []);
-void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []);
-void creationTableIndexNonDenseChainee(fichier F, Index tableIndex[]);
-int getIndexSize(Index tableIndex[]);
+void creationTableIndexDenseContigue(fichier F, Index densetableIndex [100]);
+void creationTableIndexDenseChainee(fichier F, Index densetableIndex [100]);
+void creationTableIndexNonDenseContigue (fichier F, Index tableIndex [100]);
+void creationTableIndexNonDenseChainee(fichier F, Index tableIndex[100]);
+int getIndexSize(Index tableIndex[100]);
 //Sauvegarder la table d'index en memoire secondaire
-void sauvegardeTableIndex(fichier *F, Index tableindex[]);
+void sauvegardeTableIndex(fichier *F, Index tableindex[100]);
 void rechercheTableIndex(fichier *F, int *i); //Recherche une table d'index en MS
 //Mettre le fichier d'index dans une table d'index en Memoire centrale
 void chargementFichierIndexDense(fichier *F, Index tableIndex[100]);

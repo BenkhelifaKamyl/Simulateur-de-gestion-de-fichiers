@@ -7,7 +7,7 @@
 #include "TableIndex.h"
 #include "Disk.h"
 
-void creationTableIndexDenseContigue(fichier F, Index densetableIndex []) {
+void creationTableIndexDenseContigue(fichier F, Index densetableIndex [100]) {
     Bloc buffer;
     int m, k = 0;
     Index X;
@@ -16,30 +16,32 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []) {
     int nbEnregistrements = lireEntete(F, 3);
 
     for (int i = premiereAdresse; i < premiereAdresse + nbBlocs; i++) {
-        if (checkBlockContigue(i) == true) {
-            memcpy(&buffer, &disk[i], sizeof(Bloc)); // Copie du bloc
-            for (int j = 0; j < BLOCK_SIZE && k < nbEnregistrements; j++) {
-                X.id = buffer.contigue.enregistrement[j].ID;
-                X.numBloc = i; // Position du bloc, pas de l'enregistrement
-                m = 0;
-                while (m < k && X.id > densetableIndex[m].id) { // Recherche de la position dans laquelle insérer
-                    m++;
-                }
-                for (int n = k; n > m; n--) { // Décalage
-                    densetableIndex[n] = densetableIndex[n - 1];
-                }
-                memcpy(&densetableIndex[m], &X, sizeof(Index)); // Copie d'enregistrement
+        if(checkBlock(i) == true ){
+            memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
+            for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
+                densetableIndex[a].id=buffer.contigue.enregistrement[j].ID;
+                densetableIndex[a].numBloc = i;
                 k++;
+                a+=1;
+            }
+        }
+    }
+    for(int i=0; i<nbEnregistrements-1; i++){
+        for(int j=i+1; j<nbEnregistrements; j++){
+            if(densetableIndex[i].id>densetableIndex[j].id){
+                X=densetableIndex[i];
+                densetableIndex[i]=densetableIndex[j];
+                densetableIndex[j]=X;
             }
         }
     }
     printf("\n La table d'index a ete cree avec succes.");
 }
 
-void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
+void creationTableIndexDenseChainee(fichier F, Index densetableIndex [100]){
     Bloc buffer;
     MetaDonnee MD;
-    int m,k=0;
+    int m,a=0,k=0;
     Index X;
     int nbBlocs = lireEntete(F,2);
     int premiereAdresse = lireEntete(F,4);
@@ -50,24 +52,26 @@ void creationTableIndexDenseChainee(fichier F, Index densetableIndex []){
         if(checkBlock(i) == true ){
             memcpy(&buffer, &disk[i],sizeof(Bloc)); //Copie du bloc
             for(int j=0;j<BLOCK_SIZE && k<nbEnregistrements;j++){
-                X.id=buffer.chainee.enregistrement[j].ID;
-                X.numBloc= i; //Position du bloc pas de l'enregistrement
-                m=0;
-                while(m<k && X.id > densetableIndex[m].id){ //Recherche de la position dans laquelle inserer
-                    m++;
-                }
-                for(int n=k; n>m; n--){ //Decalage
-                    densetableIndex[n]=densetableIndex[n-1];
-                }
-                memcpy(&densetableIndex[m],&X, sizeof(Index)); //Copie d'enregistrement
+                densetableIndex[a].id=buffer.chainee.enregistrement[j].ID;
+                densetableIndex[a].numBloc = i;
                 k++;
+                a+=1;
             }
             i=buffer.chainee.next;
         }
     }
+    for(int i=0; i<nbEnregistrements-1; i++){
+        for(int j=i+1; j<nbEnregistrements; j++){
+            if(densetableIndex[i].id>densetableIndex[j].id){
+                X=densetableIndex[i];
+                densetableIndex[i]=densetableIndex[j];
+                densetableIndex[j]=X;
+            }
+        }
+    }
     printf("\nLa table d'index a ete cree avec succes.");
 }
-void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
+void creationTableIndexNonDenseContigue (fichier F, Index tableIndex [100]){
     Bloc buffer;
     MetaDonnee MD;
     int k=0;
@@ -88,7 +92,7 @@ void creationTableIndexNonDenseContigue (fichier F, Index tableIndex []){
     }
     printf("\n la table d'index non dense a ete cree avec succes.");
  }
-void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
+void creationTableIndexNonDenseChainee (fichier F, Index tableIndex [100]){
     Bloc buffer;
     MetaDonnee MD;
     int k=0;
@@ -122,7 +126,7 @@ void initializeIndexFiles(){
         }
     }
 }
-void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'index en "MS"
+void sauvegardeTableIndex(fichier *F, Index tableindex[100]){ //Mettre la table d'index en "MS"
     //Lecture des metadonnees
     int i;
     printf("\nTest sauvegarde\n");
@@ -134,7 +138,7 @@ void sauvegardeTableIndex(fichier *F, Index tableindex[]){ //Mettre la table d'i
     if (i == -1) { printf("Erreur : Pas d'espace disponible ou fichier inexistant pour un nouveau fichier dans la MS.\n"); return; }
     else{
         int j=0;
-        while(tableindex[j].numBloc>0){
+        while(j<nbEnregistrements){
             tablesIndex[i][j].id= tableindex[j].id;
             tablesIndex[i][j].numBloc = tableindex[j].numBloc;
             j++;
@@ -181,7 +185,7 @@ void chargementFichierIndexDense(fichier  *F, Index tableIndexDense [100]){
     if (i == -1) { printf("Erreur : Pas d'espace disponible ou fichier inexistant pour un nouveau fichier dans la MS.\n"); return; }
     else{
         int j=0;
-        while(tablesIndex[i][j].numBloc>0){
+        while(j<nbEnregistrements){
             tableIndexDense[j].id = tablesIndex[i][j].id;
             tableIndexDense[j].numBloc = tablesIndex[i][j].numBloc;
             j++;
@@ -198,7 +202,7 @@ void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[100]){
     if (i == -1) { printf("Erreur : Pas d'espace disponible ou fichier inexistant pour un nouveau fichier dans la MS.\n"); return; }
     else{
         int j=0;
-        while(tablesIndex[i][j].numBloc>0){
+        while(j<nbBlocs){
             tableIndexNonDense[j].id = tablesIndex[i][j].id;
             tableIndexNonDense[j].numBloc = tablesIndex[i][j].numBloc;
             j++;
@@ -214,15 +218,17 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
     chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
 
     while (gauche <= droite) {
-        milieu = (gauche + droite) / 2;
 
+        milieu = (gauche + droite) / 2;
         // Lire l'entrée de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
+            printf("\nCheck numero 1");
             *numBloc = tableIndex[milieu].numBloc; //Numero du bloc
             for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
                 if(lireEnteteGlobal(*F)==Chainee){
                     if(disk[*numBloc].chainee.enregistrement[i].ID==ID){
+                        printf("\nCheck numero 2");
                         *deplacement=i;
                         break;
                     }
@@ -290,7 +296,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     int gauche = 0, droite = nbrBlocs - 1, milieu; //Dichotomie
     typeOrganisation type = lireEnteteGlobal(*F); //Chaine ou contigu
     Index tableIndex[100];
-    chargementFichierIndexNonDense(F,tableIndex); //Charger le fichier d'index en MC
+    chargementFichierIndexDense(F,tableIndex); //Charger le fichier d'index en MC
 
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
