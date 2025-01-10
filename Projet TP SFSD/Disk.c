@@ -817,36 +817,37 @@ void deleteRecordLogicalcontigue(fichier *F, int recordID) {
 
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(fichier *F, int recordID) {
-    int currentBlockID = lireEntete(*F, 4); // Get the starting block of the file
-    if (currentBlockID == -1) { // Check if the file is initialized
+    int currentBlockID = lireEntete(*F, 4); // Obtenir le bloc de départ du fichier
+    if (currentBlockID == -1) { // Vérifier si le fichier est initialisé
         printf("Error: File not initialized.\n");
         return;
     }
 
-    while (currentBlockID != -1) { // Traverse linked blocks
-        if (!disk[currentBlockID].chainee.free) { // Check if the block is in use
-            for (int j = 0; j < BLOCK_SIZE; j++) { // Traverse records in the block
-                if (disk[currentBlockID].chainee.enregistrement[j].ID == recordID) { // If the record matches the given ID
-                    // Physically delete the record by resetting its fields
-                    disk[currentBlockID].chainee.enregistrement[j].ID = 0; // Reset record ID
-                    disk[currentBlockID].chainee.enregistrement[j].Supprime = false; // Reset "deleted" flag
-                    memset(disk[currentBlockID].chainee.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].chainee.enregistrement[j].Data)); // Clear data
+    while (currentBlockID != -1) { // Parcourir les blocs chaînés
+        if (!disk[currentBlockID].chainee.free) { // Vérifier si le bloc est utilisé
+            for (int j = 0; j < BLOCK_SIZE; j++) { // Parcourir les enregistrements dans le bloc
+                if (disk[currentBlockID].chainee.enregistrement[j].ID == recordID) { // Si l'enregistrement correspond
+                    // Supprimer physiquement l'enregistrement en réinitialisant ses champs
+                    disk[currentBlockID].chainee.enregistrement[j].ID = 0; // Réinitialiser l'ID
+                    disk[currentBlockID].chainee.enregistrement[j].Supprime = false; // Réinitialiser le flag "supprimé"
+                    memset(disk[currentBlockID].chainee.enregistrement[j].Data, 0, sizeof(disk[currentBlockID].chainee.enregistrement[j].Data)); // Effacer les données
                     printf("Record %d physically deleted.\n", recordID);
 
-                    // Update metadata
-                    int recordCount = lireEntete(*F, 3);
-                    MajEntetenum(F, 3, recordCount - 1); // Decrement the record count
-                    chargerMetadonnees(*F);
-                    return; // Exit after deletion
+                    // Mettre à jour les métadonnées
+                    int recordCount = lireEntete(*F, 3); // Lire le nombre total d'enregistrements
+                    MajEntetenum(F, 3, recordCount - 1); // Décrémenter le nombre d'enregistrements
+                    chargerMetadonnees(*F); // Charger les métadonnées mises à jour
+                    return; // Quitter après la suppression
                 }
             }
         }
-        currentBlockID = disk[currentBlockID].chainee.next; // Move to the next block
+        currentBlockID = disk[currentBlockID].chainee.next; // Passer au bloc suivant
     }
 
-    // If the record is not found in any block
+    // Si l'enregistrement n'est pas trouvé dans aucun bloc
     printf("Error: Record %d not found.\n", recordID);
 }
+
 
 // 10. Physical Deletion of a Record (Contiguous)
 void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
