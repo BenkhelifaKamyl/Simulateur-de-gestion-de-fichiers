@@ -815,6 +815,18 @@ void deleteRecordLogicalcontigue(fichier *F, int recordID) {
             // Marquer l'enregistrement comme supprimé
             disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = true;
             printf("Record %d marked as logically deleted.\n", recordID);
+
+            // Mise à jour de l'index directement
+            for (int j = 0; j < INDEX_SIZE; j++) {
+                if (indexTable[j].recordID == recordID) {
+                    indexTable[j].isDeleted = true; // Marquer l'entrée d'index comme supprimée
+                    printf("Index updated for Record %d.\n", recordID);
+                    return;
+                }
+            }
+
+            // Si aucun index correspondant n'est trouvé
+            printf("No index found for Record %d, but it was marked as deleted in the file.\n", recordID);
             return;
         }
 
@@ -828,8 +840,6 @@ void deleteRecordLogicalcontigue(fichier *F, int recordID) {
     // Si l'enregistrement n'est pas trouvé
     printf("Error: Record %d not found.\n", recordID);
 }
-
-
 
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(fichier *F, int recordID) {
@@ -853,7 +863,19 @@ void deleteRecordPhysicalchaine(fichier *F, int recordID) {
                     int recordCount = lireEntete(*F, 3); // Lire le nombre total d'enregistrements
                     MajEntetenum(F, 3, recordCount - 1); // Décrémenter le nombre d'enregistrements
                     chargerMetadonnees(*F); // Charger les métadonnées mises à jour
-                    return; // Quitter après la suppression
+
+                    // Mise à jour de l'index
+                    for (int k = 0; k < INDEX_SIZE; k++) {
+                        if (indexTable[k].recordID == recordID) {
+                            indexTable[k].isDeleted = true; // Marquer l'entrée dans la table d'index comme supprimée
+                            printf("Index updated for Record %d.\n", recordID);
+                            return; // Quitter après la suppression et la mise à jour des index
+                        }
+                    }
+
+                    // Si aucun index correspondant n'est trouvé
+                    printf("Warning: No index found for Record %d, but it was deleted from the file.\n", recordID);
+                    return;
                 }
             }
         }
