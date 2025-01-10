@@ -69,7 +69,7 @@ void Menu(){
             scanf("%s", filename);
             rechercheNomFichier(&F,filename,&i);
             do{
-                printf("\nVoulez vous supprimer un enregistrement: 1)Physiquement 2)Logiquement  ");
+                printf("\nVoulez vous supprimer un enregistrement: 1)Logiquement 2)Physiquement  ");
                 scanf("%d",&k);
             }while(k<1 || k>2);
             printf("\nDonnez l'ID de l'enregistrement a supprimer ");
