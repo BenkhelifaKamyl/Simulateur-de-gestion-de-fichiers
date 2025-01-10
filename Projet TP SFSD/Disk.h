@@ -35,6 +35,10 @@ bool isDiskContigu();
 //Affiche le disque
 void AfficherDisqueContigue();
 void AfficherDisqueChainee();
+void AfficherBlocContigue(int i);
+void AfficherBlocChainee(int i);
+void AfficherFichierContigue(fichier F);
+void AfficherFichierChainee(fichier F);
 //Initialisation
 void initializeBlockChainee(int i);
 void initializeBlockContigue(int i);

@@ -28,7 +28,7 @@ void Menu(){
 
     do{
         boldColor(7);
-        printf("\nChoisissez ce que vous voulez faire:\n1) Creer un fichier\n2) Afficher la memoire secondaire\n3) Afficher les metadonnees des fichiers\n4) Rechercher un enregistrement\n5) Inserer un enregistrement\n6) Supprimer un enregistrement\n7) Defragmenter un fichier\n8) Supprimer un fichier\n9) Renommer un fichier\n10) Compactage de la memoire secondaire\n11) Vider la memoire secondaire \n12) Quitter le programme.\n");
+        printf("\nChoisissez ce que vous voulez faire:\n1) Creer un fichier\n2) Afficher la memoire secondaire\n3) Afficher les metadonnees des fichiers\n4) Rechercher un enregistrement\n5) Inserer un enregistrement\n6) Supprimer un enregistrement\n7) Defragmenter un fichier\n8) Supprimer un fichier\n9) Renommer un fichier\n10) Compactage de la memoire secondaire\n11) Vider la memoire secondaire \n12) Afficher les ID d'enregistrements d'un fichier \n13) Quitter le programme.\n");
         resetColor();
         scanf("%d",&c);
         switch (c){
@@ -72,17 +72,22 @@ void Menu(){
                 printf("\nVoulez vous supprimer un enregistrement: 1)Logiquement 2)Physiquement  ");
                 scanf("%d",&k);
             }while(k<1 || k>2);
-            printf("\nDonnez l'ID de l'enregistrement a supprimer ");
-            scanf("%d",&ID);
-            if(k==1){
-                if(c1==1)
+
+            if(c1==1){
+                AfficherFichierChainee(F);
+                printf("\nDonnez l'ID de l'enregistrement a supprimer ");
+                scanf("%d",&ID);
+                if(k==1)
                     deleteRecordLogicalchainee(&F,ID);
                 else
-                    deleteRecordLogicalcontigue(&F,ID);
+                    deleteRecordPhysicalchaine(&F,ID);
             }
             else{
-                if(c1==1)
-                    deleteRecordPhysicalchaine(&F,ID);
+                AfficherFichierContigue(F);
+                printf("\nDonnez l'ID de l'enregistrement a supprimer ");
+                scanf("%d",&ID);
+                if(k==1)
+                    deleteRecordLogicalcontigue(&F,ID);
                 else
                     deleteRecordPhysicalContiguous(&F,ID);
             }
@@ -116,6 +121,15 @@ void Menu(){
                 clearDiskchainee();
             else
                 clearDiskContigue();
+            break;
+        case 12:
+            printf("\nDonnez le nom du fichier que vous voulez lire: ");
+            scanf("%s", filename);
+            rechercheNomFichier(&F,filename,&i);
+            if(c1==1)
+                AfficherFichierChainee(F);
+            else
+                AfficherFichierContigue(F);
             break;
         default: //Fin du programme
             if(c1==1)
