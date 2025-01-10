@@ -325,7 +325,7 @@ void fillFileChainee(bool isSorted, fichier *F) {
 
     // Fill buffer with records
     for (int i = 0; i < BUFFER_SIZE && i < nbEnregistrements; i++) {
-        buffer[i].ID = rand()%100; // Assign IDs sequentially
+        buffer[i].ID = rand()%100 + 1; // Assign IDs sequentially
         snprintf(buffer[i].Data, sizeof(buffer[i].Data), "Record_%d", buffer[i].ID);
         buffer[i].Supprime = false;
     }
@@ -408,7 +408,6 @@ void fillFileContigue(bool isSorted, fichier *F) {
     int recordsFilled = 0;
     int blocksUsed = 0;
     int firstBlockAddress = -1;
-    int lastBlockAddress = -1;
     int bufferIndex = 0;
 
     // Retrieve metadata
@@ -423,7 +422,7 @@ void fillFileContigue(bool isSorted, fichier *F) {
 
     // Fill buffer with records
     for (int i = 0; i < BUFFER_SIZE && i < nbEnregistrements; i++) {
-        buffer[i].ID = i + 1; // Assign IDs sequentially
+        buffer[i].ID = rand()%100 + 1; // Assign IDs sequentially
         snprintf(buffer[i].Data, sizeof(buffer[i].Data), "Record_%d", buffer[i].ID);
         buffer[i].Supprime = false;
     }
@@ -442,7 +441,7 @@ void fillFileContigue(bool isSorted, fichier *F) {
     }
 
     // Insert records from buffer into the disk in contiguous blocks
-    for (int i = 0; i < MAX_BLOCKS && bufferIndex < nbEnregistrements; i++) {
+    for (int i = premiereAdresse; i < nbBlocs; i++) {
         if (disk[i].contigue.free) {
             disk[i].contigue.free = false; // Mark the block as occupied
             blocksUsed++;
@@ -450,14 +449,15 @@ void fillFileContigue(bool isSorted, fichier *F) {
             // Update the first block address if not set
             if (firstBlockAddress == -1)
                 firstBlockAddress = i;
+
             bufferIndex=0;
             // Copy buffer records to the current disk block
-            for (int j = 0; j < BLOCK_SIZE && bufferIndex < nbEnregistrements; j++) {
-                disk[i].contigue.enregistrement[j] = buffer[bufferIndex++];
+            for (int j = 0; j < BLOCK_SIZE && recordsFilled < nbEnregistrements; j++) {
+                memcpy(&disk[i].contigue.enregistrement[j], &buffer[bufferIndex], sizeof(Enregistrement));
+                bufferIndex++;
                 recordsFilled++;
             }
 
-            lastBlockAddress = i; // Update last block address
         }
     }
     // Create and save the index table
@@ -470,6 +470,8 @@ void fillFileContigue(bool isSorted, fichier *F) {
     sauvegardeTableIndex(F, tableIndex);
     printf("File filled in contiguous mode with %d records. Sorted: %s\n", recordsFilled, isSorted ? "Yes" : "No");
 }
+
+
 
 // Function: ChargerFichierChainee
 void ChargerFichierChainee(fichier *F) {
@@ -568,9 +570,6 @@ void ChargerFichierContigue(fichier *F) {
         }
     } else {
         // Mark the blocks as allocated
-        for (int i = startBlock; i < startBlock + nbBlocs; i++) {
-            disk[i].contigue.free = false;
-        }
         // Update the file's metadata
         MajEntetenum(F, 4, startBlock);  // Update with the address of the first block
         MajEntetenum(F, 2, nbBlocs);    // Update the number of blocks
