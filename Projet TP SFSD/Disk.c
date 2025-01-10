@@ -21,38 +21,58 @@ void AfficherDisqueContigue() {
 
     for (i = 0; i < MAX_BLOCKS; i++) {
         if (checkBlockContigue(i) == false) {
+            // Bloc libre
             boldColor(2);
-            printf("\n[%d] Bloc libre.",i);
+            printf("\n[%d] Bloc libre.", i);
             resetColor();
         } else {
-            rechercheFichierMeta(i, &F); // Recuperer les metadonnees du bloc
-            if(F.MDfile==NULL) continue;
-            nbBlocs = lireEntete(F, 2);
-            nbEnregistrements = lireEntete(F, 3);
-            premiereAdresse = lireEntete(F, 4);
-            lireNomFichier(F, filename);
+            // Bloc utilisé : récupérer les métadonnées associées
+            if (!rechercheFichierMeta(i, &F)) { // Vérification de la récupération
+                printf("\nErreur : Impossible de récupérer les métadonnées pour le bloc %d.", i);
+                continue;
+            }
 
-            // Parcourir tous les blocs du fichier
+            if (F.MDfile == NULL) {
+                printf("\nErreur : Fichier de métadonnées introuvable pour le bloc %d.", i);
+                continue;
+            }
+
+            nbBlocs = lireEntete(F, 2); // Nombre de blocs alloués au fichier
+            nbEnregistrements = lireEntete(F, 3); // Nombre total d'enregistrements
+            premiereAdresse = lireEntete(F, 4); // Adresse du premier bloc
+            lireNomFichier(F, filename); // Nom du fichier associé
+
+            // Afficher les informations de chaque bloc utilisé par le fichier
             for (k = 0; k < nbBlocs; k++) {
-                if (i + k >= MAX_BLOCKS) break;  // Sortir si on dépasse les blocs disponibles
+                if (i + k >= MAX_BLOCKS) {
+                    break; // Sortir si on dépasse les blocs disponibles
+                }
 
+                // Calculer le nombre d'enregistrements dans le bloc courant
                 if (k == nbBlocs - 1) {
-                    j = nbEnregistrements % BLOCK_SIZE;
+                    j = nbEnregistrements % BLOCK_SIZE; // Dernier bloc : peut ne pas être plein
                     if (j == 0) {
-                        j = BLOCK_SIZE;
+                        j = BLOCK_SIZE; // Si modulo = 0, c'est un bloc plein
                     }
                 } else {
-                    j = BLOCK_SIZE;
+                    j = BLOCK_SIZE; // Blocs intermédiaires pleins
                 }
+
+                // Afficher les informations du bloc
                 boldColor(1);
-                printf("\n[%d] Nom du fichier: %s et nombre d'enregistrements: %d",i+k, filename, j);
+                printf("\n[%d] Nom du fichier : %s, Nombre d'enregistrements dans ce bloc : %d", i + k, filename, j);
                 resetColor();
             }
-            i += nbBlocs - 1;  // Avancer `i` de `nbBlocs - 1` pour passer aux prochains blocs
-            fclose(F.MDfile);  // Fermer le fichier de metadonnees après traitement
+
+            // Passer aux blocs suivants (sauter les blocs utilisés par ce fichier)
+            i += nbBlocs - 1;
+
+            // Fermer le fichier de métadonnées après traitement
+            fclose(F.MDfile);
         }
     }
 }
+
 
 void AfficherDisqueChainee(){
     int i,j,nbEnregistrements;
