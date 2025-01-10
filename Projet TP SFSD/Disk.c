@@ -325,7 +325,7 @@ void fillFileChainee(bool isSorted, fichier *F) {
 
     // Fill buffer with records
     for (int i = 0; i < BUFFER_SIZE && i < nbEnregistrements; i++) {
-        buffer[i].ID = i + 1; // Assign IDs sequentially
+        buffer[i].ID = rand()%100; // Assign IDs sequentially
         snprintf(buffer[i].Data, sizeof(buffer[i].Data), "Record_%d", buffer[i].ID);
         buffer[i].Supprime = false;
     }
@@ -352,6 +352,8 @@ void fillFileChainee(bool isSorted, fichier *F) {
         return;
     }
 
+    printf("Starting block filling process...\n");
+
     // Allocate and fill the required number of blocks
     for (int i = 0; i < nbBlocs && recordsFilled < nbEnregistrements; i++) {
         if (currentBlockAddress == -1) {
@@ -370,9 +372,11 @@ void fillFileChainee(bool isSorted, fichier *F) {
             disk[previousBlockAddress].chainee.next = currentBlockAddress;
         }
 
+        printf("Filling block at address %d...\n", currentBlockAddress);
+        bufferIndex=0;
         // Fill the current block with records
         for (int j = 0; j < BLOCK_SIZE && recordsFilled < nbEnregistrements; j++) {
-            disk[currentBlockAddress].chainee.enregistrement[j] = buffer[bufferIndex++];
+            memcpy(&disk[currentBlockAddress].chainee.enregistrement[j], &buffer[bufferIndex++],sizeof(Enregistrement));
             recordsFilled++;
         }
 
@@ -446,7 +450,7 @@ void fillFileContigue(bool isSorted, fichier *F) {
             // Update the first block address if not set
             if (firstBlockAddress == -1)
                 firstBlockAddress = i;
-
+            bufferIndex=0;
             // Copy buffer records to the current disk block
             for (int j = 0; j < BLOCK_SIZE && bufferIndex < nbEnregistrements; j++) {
                 disk[i].contigue.enregistrement[j] = buffer[bufferIndex++];
@@ -912,123 +916,105 @@ void deleteRecordLogicalchainee(fichier *F, int recordID) {
 // 10. Physical Deletion of a Record(chained)
 void deleteRecordPhysicalchaine(fichier *F, int recordID) {
     int currentBlockID = lireEntete(*F, 4); // Obtenir le bloc de départ du fichier
-    int nbBlocs = lireEntete(*F,2);
+    int nbBlocs = lireEntete(*F, 2);
     bool isSorted = liretypeTri(*F); // Déterminer si le fichier est trié
     int recordCount = lireEntete(*F, 3); // Lire le nombre total d'enregistrements
-    int numBloc, deplacement;
+    int numBloc = -1, deplacement = -1;
     Index indexTable[100];
 
     if (currentBlockID == -1) { // Vérifier si le fichier est initialisé
         printf("Error: File not initialized.\n");
         return;
     }
-    if(isSorted){
-        rechercheEnregistrementNonDense(F,recordID,&numBloc,&deplacement);
-        chargementFichierIndexNonDense(F,indexTable);
-        int k=0; bool trouve = false;
-        while(k<getIndexSize(indexTable)){
-            if(indexTable[k].id==recordID){
-                trouve=true;
-                break;
-            }
-            else
-                k++;
-        }
-        if(deplacement==-1 || numBloc==-1){
-            printf("\nL'enregistrement n'existe pas.");
-            return;
-        }
-        else{
-            while(numBloc!=-1){
-                while(deplacement<BLOCK_SIZE-1 && disk[numBloc].chainee.enregistrement[deplacement].ID!=0){
-                    if(trouve==true){
-                        if(deplacement+1<BLOCK_SIZE)
-                            indexTable[k].id=disk[numBloc].chainee.enregistrement[deplacement+1].ID;
-                        else{
-                            indexTable[k].id=-1; //Cas du dernier enregistrement
-                            indexTable[k].numBloc=-1;
-                        }
-                        sauvegardeTableIndex(F,indexTable);
-                        printf("Index updated for Record %d.\n", recordID);
-                        trouve=false;
-                    }
-                    memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[numBloc].chainee.enregistrement[deplacement+1],sizeof(Enregistrement));
-                    deplacement++;
-                }
-                if(disk[numBloc].chainee.next==-1){
-                    disk[numBloc].chainee.enregistrement[deplacement].ID=0;
-                    numBloc = -1;
-                }
-                else{
-                    memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[disk[numBloc].chainee.next].chainee.enregistrement[0],sizeof(Enregistrement));
-                    numBloc = disk[numBloc].chainee.next;
-                    deplacement=0;
-                    if(disk[numBloc].chainee.enregistrement[deplacement+1].ID==0){
-                        disk[numBloc].chainee.enregistrement[deplacement].ID=0;
-                        MajEntetenum(F,2,nbBlocs-1);
-                    }
 
+    printf("Starting physical deletion for Record ID: %d\n", recordID);
+
+    if (isSorted) {
+        rechercheEnregistrementNonDense(F, recordID, &numBloc, &deplacement);
+    } else {
+        rechercheEnregistrementDense(F, recordID, &numBloc, &deplacement);
+    }
+
+    printf("Record located at numBloc: %d, deplacement: %d\n", numBloc, deplacement);
+
+    if (deplacement == -1 || numBloc == -1) {
+        printf("\nL'enregistrement n'existe pas.\n");
+        return;
+    }
+
+    chargementFichierIndexNonDense(F, indexTable);
+    int k = 0;
+    bool trouve = false;
+    while (k < getIndexSize(indexTable)) {
+        if (indexTable[k].id == recordID) {
+            trouve = true;
+            break;
+        }
+        k++;
+    }
+
+    if (!trouve) {
+        printf("No matching index found for Record %d.\n", recordID);
+        return;
+    }
+
+    printf("Index located, starting deletion...\n");
+
+    while (numBloc != -1) {
+        while (deplacement < BLOCK_SIZE - 1 && disk[numBloc].chainee.enregistrement[deplacement].ID != 0) {
+            if (trouve) {
+                if (deplacement + 1 < BLOCK_SIZE) {
+                    indexTable[k].id = disk[numBloc].chainee.enregistrement[deplacement + 1].ID;
+                } else {
+                    indexTable[k].id = -1; // Cas du dernier enregistrement
+                    indexTable[k].numBloc = -1;
                 }
+                sauvegardeTableIndex(F, indexTable);
+                printf("Index updated for Record %d.\n", recordID);
+                trouve = false;
             }
-            MajEntetenum(F,3,recordCount-1);
-            chargerMetadonnees(*F);
+            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[numBloc].chainee.enregistrement[deplacement + 1], sizeof(Enregistrement));
+            deplacement++;
+        }
+
+        if (disk[numBloc].chainee.next == -1) {
+            disk[numBloc].chainee.enregistrement[deplacement].ID = 0;
+            numBloc = -1;
+        } else {
+            memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[disk[numBloc].chainee.next].chainee.enregistrement[0], sizeof(Enregistrement));
+            numBloc = disk[numBloc].chainee.next;
+            deplacement = 0;
+            if (disk[numBloc].chainee.enregistrement[deplacement + 1].ID == 0) {
+                disk[numBloc].chainee.enregistrement[deplacement].ID = 0;
+                MajEntetenum(F, 2, nbBlocs - 1);
+            }
         }
     }
-    else{
-        rechercheEnregistrementDense(F,recordID,&numBloc,&deplacement);
-        if(deplacement==-1 || numBloc==-1){
-            printf("\nL'enregistrement n'existe pas.");
-            return;
-        }
-        chargementFichierIndexDense(F,indexTable);
-        int k=0; bool trouve = false;
 
-        while(k<getIndexSize(indexTable)){
-            if(indexTable[k].id==recordID){
-                trouve=true;
-                break;
-            }
-            else
-                k++;
-        }
-        while(numBloc!=-1){
-            while(deplacement<BLOCK_SIZE-1 && disk[numBloc].chainee.enregistrement[deplacement].ID!=0){
-                memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[numBloc].chainee.enregistrement[deplacement+1],sizeof(Enregistrement));
-                deplacement++;
-                memcpy(&indexTable[k],&indexTable[k+1],sizeof(Index));
-                k++;
-            }
-            if(disk[numBloc].chainee.next==-1){
-                disk[numBloc].chainee.enregistrement[deplacement].ID=0;
-                numBloc = -1;
-            }
-            else{
-                memcpy(&disk[numBloc].chainee.enregistrement[deplacement], &disk[disk[numBloc].chainee.next].chainee.enregistrement[0],sizeof(Enregistrement));
-                indexTable[k].id=indexTable[k+1].id;
-                indexTable[k+1].numBloc=numBloc;
-                k++;
-                numBloc = disk[numBloc].chainee.next;
-                deplacement=0;
-                if(disk[numBloc].chainee.enregistrement[deplacement+1].ID==0){
-                    disk[numBloc].chainee.enregistrement[deplacement].ID=0;
-                    MajEntetenum(F,2,nbBlocs-1);
-                }
+    printf("Record physically deleted, updating index and metadata...\n");
 
-            }
-        }
-        indexTable[k].id=-1;
-        indexTable[k].numBloc=-1;
-        printf("Index updated for Record %d.\n", recordID);
-        sauvegardeTableIndex(F,indexTable);
-        MajEntetenum(F,3,recordCount-1);
-        chargerMetadonnees(*F);
-        }
+    for (int j = k; j < getIndexSize(indexTable) - 1; j++) {
+        indexTable[j].id = indexTable[j + 1].id;
+        indexTable[j].numBloc = indexTable[j + 1].numBloc;
+    }
+
+    indexTable[getIndexSize(indexTable) - 1].id = -1;
+    indexTable[getIndexSize(indexTable) - 1].numBloc = -1;
+    printf("Index updated for Record %d.\n", recordID);
+    sauvegardeTableIndex(F, indexTable);
+    MajEntetenum(F, 3, recordCount - 1);
+    chargerMetadonnees(*F);
+
+    printf("Deletion completed successfully.\n");
 }
 
 // 10. Physical Deletion of a Record (Contiguous)
-void deleteRecordPhysicalContiguous(fichier *F, int recordID) {}
-   /* int startBlock = lireEntete(*F, 4); // Obtenir le bloc de départ du fichier
-    int recordCount = lireEntete(*F, 3); // Obtenir le nombre total d'enregistrements
+void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
+    int startBlock = lireEntete(*F, 4); // Obtenir le bloc de départ du fichier
+    int nbBlocs = lireEntete(*F, 2);    // Nombre de blocs dans le fichier
+    bool isSorted = liretypeTri(*F);    // Déterminer si le fichier est trié
+    int recordCount = lireEntete(*F, 3); // Lire le nombre total d'enregistrements
+    Index indexTable[100]; // Table d'index
 
     if (startBlock == -1) { // Vérifier si le fichier est initialisé
         printf("Error: File not initialized.\n");
@@ -1037,44 +1023,70 @@ void deleteRecordPhysicalContiguous(fichier *F, int recordID) {}
 
     // Parcourir les enregistrements dans les blocs contigus
     for (int i = 0; i < recordCount; i++) {
-        int blockIndex = startBlock + (i / BLOCK_SIZE); // Calculer l'indice du bloc
-        int recordIndex = i % BLOCK_SIZE;              // Calculer l'indice de l'enregistrement dans le bloc
+        int blockIndex = startBlock + (i / BLOCK_SIZE); // Identifier le bloc correspondant
+        int recordIndex = i % BLOCK_SIZE;              // Identifier l'index dans le bloc
 
-        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Correspondance trouvée
+        // Si l'enregistrement correspond à l'ID recherché
+        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) {
             // Supprimer physiquement l'enregistrement en réinitialisant ses champs
             disk[blockIndex].contigue.enregistrement[recordIndex].ID = 0; // Réinitialiser l'ID
-            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Réinitialiser le drapeau "supprimé"
+            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Réinitialiser le flag "supprimé"
             memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data)); // Effacer les données
             printf("Record %d physically deleted.\n", recordID);
+            int a = recordIndex; // Sauvegarder l'index de l'enregistrement supprimé
 
-            // Mettre à jour les métadonnées
-            int updatedRecordCount = recordCount - 1; // Décrémenter le nombre total d'enregistrements
-            MajEntetenum(F, 3, updatedRecordCount); // Mettre à jour l'en-tête
-            chargerMetadonnees(*F); // Recharger les métadonnées
-
-            // Mise à jour de l'index
-            bool indexFound = false;
-            for (int k = 0; k < INDEX_SIZE; k++) {
-                if (indexTable[k].recordID == recordID) { // Trouver l'entrée correspondante dans l'index
-                    indexTable[k].recordID = -1; // Réinitialiser l'ID de l'index
-                    indexTable[k].blockID = -1; // Réinitialiser l'ID du bloc
-                    indexTable[k].recordOffset = -1; // Réinitialiser le décalage
-                    indexFound = true;
-                    printf("Index updated for Record %d.\n", recordID);
-                    break; // Quitter la boucle une fois l'index mis à jour
+            // Mise à jour de l'index si le fichier est trié
+            if (isSorted) {
+                chargementFichierIndexNonDense(F, indexTable);
+                for (int j = 0; j < getIndexSize(indexTable); j++) {
+                    if (indexTable[j].id == recordID) {
+                        if (a < BLOCK_SIZE) {
+                            indexTable[j].id = disk[blockIndex].contigue.enregistrement[a + 1].ID;
+                        } else {
+                            indexTable[j].id = -1; // Cas du dernier enregistrement
+                            indexTable[j].numBloc = -1;
+                        }
+                        sauvegardeTableIndex(F, indexTable);
+                        printf("Index updated for Record %d.\n", recordID);
+                        if (j == 0)
+                            MajEntetenum(F, 2, nbBlocs - 1);
+                        MajEntetenum(F, 3, recordCount - 1);
+                        chargerMetadonnees(*F);
+                        return;
+                    }
+                }
+            } else {
+                chargementFichierIndexNonDense(F, indexTable);
+                for (int j = 0; j < getIndexSize(indexTable); j++) {
+                    if (indexTable[j].id == recordID) {
+                        int k = j;
+                        while (indexTable[k].numBloc != -1 && k < MAX_INDEX_ENTRIES) {
+                            memcpy(&indexTable[k], &indexTable[k + 1], sizeof(Index));
+                            k++;
+                        }
+                        indexTable[k].id = -1;
+                        indexTable[k].numBloc = -1;
+                        printf("Index updated for Record %d.\n", recordID);
+                        sauvegardeTableIndex(F, indexTable);
+                        if (j == 0)
+                            MajEntetenum(F, 2, nbBlocs - 1);
+                        MajEntetenum(F, 3, recordCount - 1);
+                        chargerMetadonnees(*F);
+                        return;
+                    }
                 }
             }
-            if (!indexFound) {
-                printf("Warning: No index found for Record %d, but it was deleted from the file.\n", recordID);
-            }
 
-            return; // Quitter après suppression
+            // Si aucun index correspondant n'est trouvé
+            printf("Warning: No index found for Record %d, but it was deleted from the file.\n", recordID);
+            return;
         }
     }
 
     // Si l'enregistrement n'est pas trouvé
     printf("Error: Record %d not found.\n", recordID);
-}*/
+}
+
 // Function to perform defragmentation(chained): update metadata, table index, and compact blocks
 void Defragmentationchainee(fichier *F) {
     printf("Défragmentation en cours...\n");

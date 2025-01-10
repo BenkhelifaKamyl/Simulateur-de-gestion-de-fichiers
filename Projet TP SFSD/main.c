@@ -72,20 +72,15 @@ void Menu(){
                 printf("\nVoulez vous supprimer un enregistrement: 1)Logiquement 2)Physiquement  ");
                 scanf("%d",&k);
             }while(k<1 || k>2);
-
+            printf("\nDonnez l'ID de l'enregistrement a supprimer ");
+            scanf("%d",&ID);
             if(c1==1){
-                AfficherFichierChainee(F);
-                printf("\nDonnez l'ID de l'enregistrement a supprimer ");
-                scanf("%d",&ID);
                 if(k==1)
                     deleteRecordLogicalchainee(&F,ID);
                 else
                     deleteRecordPhysicalchaine(&F,ID);
             }
             else{
-                AfficherFichierContigue(F);
-                printf("\nDonnez l'ID de l'enregistrement a supprimer ");
-                scanf("%d",&ID);
                 if(k==1)
                     deleteRecordLogicalcontigue(&F,ID);
                 else
