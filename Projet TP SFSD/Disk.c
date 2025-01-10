@@ -851,36 +851,34 @@ void deleteRecordPhysicalchaine(fichier *F, int recordID) {
 
 // 10. Physical Deletion of a Record (Contiguous)
 void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
-    int startBlock = lireEntete(*F, 4); // Get the starting block of the file
-    int recordCount = lireEntete(*F, 3); // Get the total number of records
+    int startBlock = lireEntete(*F, 4); // Obtenir le bloc de départ du fichier
+    int recordCount = lireEntete(*F, 3); // Obtenir le nombre total d'enregistrements
 
-    if (startBlock == -1) { // Check if the file is initialized
+    if (startBlock == -1) { // Vérifier si le fichier est initialisé
         printf("Error: File not initialized.\n");
         return;
     }
 
-    // Traverse the records in the contiguous blocks
+    // Parcourir les enregistrements dans les blocs contigus
     for (int i = 0; i < recordCount; i++) {
-        int blockIndex = startBlock + (i / BLOCK_SIZE);
-        int recordIndex = i % BLOCK_SIZE;
+        int blockIndex = startBlock + (i / BLOCK_SIZE); // Calculer l'indice du bloc
+        int recordIndex = i % BLOCK_SIZE;              // Calculer l'indice de l'enregistrement dans le bloc
 
-        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Match found
-            // Physically delete the record by resetting its fields
-            disk[blockIndex].contigue.enregistrement[recordIndex].ID = 0; // Reset record ID
-            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Reset "deleted" flag
-             // Clear data
-            memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data));
+        if (disk[blockIndex].contigue.enregistrement[recordIndex].ID == recordID) { // Correspondance trouvée
+            // Supprimer physiquement l'enregistrement en réinitialisant ses champs
+            disk[blockIndex].contigue.enregistrement[recordIndex].ID = 0; // Réinitialiser l'ID
+            disk[blockIndex].contigue.enregistrement[recordIndex].Supprime = false; // Réinitialiser le drapeau "supprimé"
+            memset(disk[blockIndex].contigue.enregistrement[recordIndex].Data, 0, sizeof(disk[blockIndex].contigue.enregistrement[recordIndex].Data)); // Effacer les données
             printf("Record %d physically deleted.\n", recordID);
 
-            // Update metadata
-            int recordCount = lireEntete(*F, 3);
-            MajEntetenum(F, 3, recordCount - 1); // Decrement the record count
-            chargerMetadonnees(*F);
-            return; // Exit after deletion
+            // Mettre à jour les métadonnées
+            MajEntetenum(F, 3, recordCount - 1); // Décrémenter le nombre total d'enregistrements
+            chargerMetadonnees(*F); // Recharger les métadonnées
+            return; // Quitter après suppression
         }
     }
 
-    // If the record is not found
+    // Si l'enregistrement n'est pas trouvé
     printf("Error: Record %d not found.\n", recordID);
 }
 
