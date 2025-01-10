@@ -22,10 +22,10 @@ void creationTableIndexDenseContigue(fichier F, Index densetableIndex []) {
                 X.id = buffer.contigue.enregistrement[j].ID;
                 X.numBloc = i; // Position du bloc, pas de l'enregistrement
                 m = 0;
-                while (m < k && X.id > densetableIndex[m].id) { // Recherche de la position dans laquelle ins√©rer
+                while (m < k && X.id > densetableIndex[m].id) { // Recherche de la position dans laquelle insÈrer
                     m++;
                 }
-                for (int n = k; n > m; n--) { // D√©calage
+                for (int n = k; n > m; n--) { // DÈcalage
                     densetableIndex[n] = densetableIndex[n - 1];
                 }
                 memcpy(&densetableIndex[m], &X, sizeof(Index)); // Copie d'enregistrement
@@ -112,7 +112,7 @@ void creationTableIndexNonDenseChainee (fichier F, Index tableIndex []){
             i=-1;
         }
     }
-    printf("\n la table d'index non dense √† √©t√© cr√©e avec succes.");
+    printf("\n la table d'index non dense a ete cree avec succes.");
 }
 void initializeIndexFiles(){
     for(int i=0; i<MAX_FILES; i++){
@@ -216,7 +216,7 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entr√©e de l'index au milieu
+        // Lire l'entrÈe de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
             *numBloc = tableIndex[milieu].numBloc; //Numero du bloc
@@ -295,7 +295,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     while (gauche <= droite) {
         milieu = (gauche + droite) / 2;
 
-        // Lire l'entr√©e de l'index au milieu
+        // Lire l'entrÈe de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
             *numbloc = tableIndex[milieu].numBloc;
@@ -373,7 +373,7 @@ void MajTableIndexDense(fichier *F, int mode, int ID, int numbloc) {
             i++;
         }
 
-        // v√©rifications
+        // vÈrifications
         if (lireEnteteGlobal(*F) == Contigue) {
             int k = 0;
             for (i = premierAdresse; i < premierAdresse + nbrBlocs; i++) {
@@ -461,7 +461,7 @@ void MajTableIndexNonDense(fichier *F, int mode, int ID, int numbloc) {
     }
 
     if (mode == 1) { // cas de suppression
-        rechercheEnregistrementNonDense(F, ID, &j, &deplacement); // Trouver l'adresse de l'enregistrement √† supprimer
+        rechercheEnregistrementNonDense(F, ID, &j, &deplacement); // Trouver l'adresse de l'enregistrement ‡ supprimer
         i = 0;
         while (j < nbrBlocs) {
             memcpy(&tableIndex[j], &tableIndex[j + 1], sizeof(Index));

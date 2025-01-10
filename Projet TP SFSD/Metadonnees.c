@@ -152,6 +152,7 @@ void MajeEntetetri(fichier *F, int nc){
 void AfficherEntete(){ //Affiche les informations de tous les fichiers de metadonnees
     for(int i=0; i<MAX_FILES; i++){
         if(Meta[i].nbBlocs!=-1){
+            boldColor(7);
             printf("\n*****Affichage des caracteristiques du %d fichier*****\n",i);
             printf("\nNom fichier: %s", Meta[i].name);
             printf("\nNombre de blocs: %d",Meta[i].nbBlocs);
@@ -165,6 +166,7 @@ void AfficherEntete(){ //Affiche les informations de tous les fichiers de metado
                 printf("\nOrganisation interne: Triee");
             else
                 printf("\nOrganisation interne: Non triee");
+            resetColor();
         }
 
     }
