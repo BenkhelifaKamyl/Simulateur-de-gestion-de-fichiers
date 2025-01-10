@@ -910,8 +910,26 @@ void deleteRecordPhysicalContiguous(fichier *F, int recordID) {
             printf("Record %d physically deleted.\n", recordID);
 
             // Mettre à jour les métadonnées
-            MajEntetenum(F, 3, recordCount - 1); // Décrémenter le nombre total d'enregistrements
+            int updatedRecordCount = recordCount - 1; // Décrémenter le nombre total d'enregistrements
+            MajEntetenum(F, 3, updatedRecordCount); // Mettre à jour l'en-tête
             chargerMetadonnees(*F); // Recharger les métadonnées
+
+            // Mise à jour de l'index
+            bool indexFound = false;
+            for (int k = 0; k < INDEX_SIZE; k++) {
+                if (indexTable[k].recordID == recordID) { // Trouver l'entrée correspondante dans l'index
+                    indexTable[k].recordID = -1; // Réinitialiser l'ID de l'index
+                    indexTable[k].blockID = -1; // Réinitialiser l'ID du bloc
+                    indexTable[k].recordOffset = -1; // Réinitialiser le décalage
+                    indexFound = true;
+                    printf("Index updated for Record %d.\n", recordID);
+                    break; // Quitter la boucle une fois l'index mis à jour
+                }
+            }
+            if (!indexFound) {
+                printf("Warning: No index found for Record %d, but it was deleted from the file.\n", recordID);
+            }
+
             return; // Quitter après suppression
         }
     }
