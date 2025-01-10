@@ -27,7 +27,9 @@ void Menu(){
         initializeIndexFiles();
 
     do{
-        printf("\nChoisissez ce que vous voulez faire:\n 1)Creer un fichier, 2)Afficher la memoire secondaire, \n3) Afficher les metadonnees des fichiers, 4) Rechercher un enregistrement, \n5) Inserer un enregistrement, 6) Supprimer un enregistrement, \n7) Defragmenter un fichier, 8) Supprimer un fichier, \n9) Renommer un fichier, 10) Compactage de la memoire secondaire, \n11) Vider la memoire secondaire, 12) Quitter le programme.\n");
+        boldColor(7);
+        printf("\nChoisissez ce que vous voulez faire:\n1) Creer un fichier\n2) Afficher la memoire secondaire\n3) Afficher les metadonnees des fichiers\n4) Rechercher un enregistrement\n5) Inserer un enregistrement\n6) Supprimer un enregistrement\n7) Defragmenter un fichier\n8) Supprimer un fichier\n9) Renommer un fichier\n10) Compactage de la memoire secondaire\n11) Vider la memoire secondaire \n12) Quitter le programme.\n");
+        resetColor();
         scanf("%d",&c);
         switch (c){
         case 1: //Creation d'un fichier (Manque table d'index)

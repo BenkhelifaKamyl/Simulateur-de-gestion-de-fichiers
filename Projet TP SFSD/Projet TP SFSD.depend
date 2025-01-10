@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1736451729 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.c
+1736498423 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
@@ -24,7 +24,7 @@
 
 1735816103 c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\disk.h
 
-1735816097 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\main.c
+1736498578 source:c:\info ing 2eme année\sfsd\solutions tps\projet tp sfsd\main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>

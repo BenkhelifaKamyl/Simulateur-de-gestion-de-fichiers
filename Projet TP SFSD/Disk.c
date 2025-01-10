@@ -22,7 +22,7 @@ void AfficherDisqueContigue() {
     for (i = 0; i < MAX_BLOCKS; i++) {
         if (checkBlockContigue(i) == false) {
             boldColor(2);
-            printf("\nBloc libre.");
+            printf("\n[%d] Bloc libre.",i);
             resetColor();
         } else {
             rechercheFichierMeta(i, &F); // Recuperer les metadonnees du bloc
@@ -45,7 +45,7 @@ void AfficherDisqueContigue() {
                     j = BLOCK_SIZE;
                 }
                 boldColor(1);
-                printf("\nNom du fichier: %s et nombre d'enregistrements: %d", filename, j);
+                printf("\n[%d] Nom du fichier: %s et nombre d'enregistrements: %d",i+k, filename, j);
                 resetColor();
             }
             i += nbBlocs - 1;  // Avancer `i` de `nbBlocs - 1` pour passer aux prochains blocs
@@ -62,7 +62,7 @@ void AfficherDisqueChainee(){
     for(i=0; i<MAX_BLOCKS; i++){
         if(checkBlock(i)==false){
             boldColor(2);
-            printf("\nBloc libre.");
+            printf("\n[%d] Bloc libre.",i);
             resetColor();
         }
         else{
@@ -80,7 +80,7 @@ void AfficherDisqueChainee(){
                     j=BLOCK_SIZE;
                 }
                 boldColor(1);
-                printf("\nNom du fichier:  %s et nombre d'enregistrements: %d",filename, j);
+                printf("\n[%d] Nom du fichier:  %s et nombre d'enregistrements: %d",i,filename, j);
                 resetColor();
                 fclose(F.MDfile);
             }
