@@ -9,7 +9,7 @@
 
 void creationTableIndexDenseContigue(fichier F, Index densetableIndex [100]) {
     Bloc buffer;
-    int m, k = 0;
+    int m, a,k = 0;
     Index X;
     int nbBlocs = lireEntete(F, 2);
     int premiereAdresse = lireEntete(F, 4);
@@ -223,12 +223,10 @@ void rechercheEnregistrementDense(fichier *F, int ID, int *numBloc, int *deplace
         // Lire l'entrée de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
-            printf("\nCheck numero 1");
             *numBloc = tableIndex[milieu].numBloc; //Numero du bloc
             for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
                 if(lireEnteteGlobal(*F)==Chainee){
                     if(disk[*numBloc].chainee.enregistrement[i].ID==ID){
-                        printf("\nCheck numero 2");
                         *deplacement=i;
                         break;
                     }
@@ -304,6 +302,7 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
         // Lire l'entrée de l'index au milieu
 
         if (tableIndex[milieu].id == ID) {
+
             *numbloc = tableIndex[milieu].numBloc;
             for(int i=0; i<BLOCK_SIZE; i++){ //Numero de deplacement (position de l'enregistrement dans le bloc)
                 if(lireEnteteGlobal(*F)==Chainee){
