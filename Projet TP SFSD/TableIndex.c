@@ -188,7 +188,7 @@ void chargementFichierIndexDense(fichier  *F, Index tableIndexDense [100]){
         }
     }
 }
-void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[]){
+void chargementFichierIndexNonDense(fichier *F, Index tableIndexNonDense[100]){
     int i;
     char filename[30];
     lireNomFichier(*F,filename);
@@ -338,7 +338,12 @@ void rechercheEnregistrementNonDense(fichier *F, int ID, int *numbloc, int *depl
     }
 
 }
-
+int getIndexSize(Index tableIndex[]){
+    int i=0;
+    while(tableIndex[i].numBloc!=-1)
+        i++;
+    return i;
+}
 void removeIndexTable(fichier *F){
      int i;
     char filename[30];

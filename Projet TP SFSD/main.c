@@ -139,7 +139,7 @@ void Menu(){
             printf("\nFin du programme!!!");
             break;
         }
-    } while(c!=12); //Condition d'arret pour sortir du programme
+    } while(c<13); //Condition d'arret pour sortir du programme
 
 
 }
